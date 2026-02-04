@@ -19,7 +19,7 @@ PORT = 5000
 # GPIO inputs (BCM numbering)
 # IMPORTANT: You did NOT provide toggle_2 pin. Defaulting to 23. Change if needed.
 INPUTS = {
-    "pushbutton 1": {"pin": 17, "bounce_time": 0.05, "role": "pb1"},
+    "pushbutton_1": {"pin": 17, "bounce_time": 0.05, "role": "pb1"},
     "pushbutton 2": {"pin": 27, "bounce_time": 0.05, "role": "pb2"},
     "toggle 1": {"pin": 22, "bounce_time": 0.05, "role": "t1"},
     "toggle 2": {"pin": 5, "bounce_time": 0.05, "role": "t2"},
