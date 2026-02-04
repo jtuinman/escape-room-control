@@ -14,7 +14,7 @@ from gpiozero import Button, OutputDevice
 # Escape room config 
 # =========================
 HOST = "0.0.0.0"
-PORT = 5000
+PORT = 8000
 
 # GPIO inputs (BCM numbering)
 # IMPORTANT: You did NOT provide toggle_2 pin. Defaulting to 23. Change if needed.
