@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Escape Room Control</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main>
+<div class="header-row">
+  <h1>Escape Room Control</h1>
+  <button class="btn danger hidden" id="shutdownBtn" type="button">
+    shutdown pi
+  </button>
+</div>
+    <section class="card">
+      <div class="row">
+        <div>
+          <div class="muted">Game state</div>
+          <div id="gameState" class="big">…</div>
+        </div>
+        <div class="timerBox">
+          <div class="muted">Timer</div>
+          <div id="timer" class="big mono">00:00</div>
+          <div id="timerRun" class="muted">…</div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn" data-state="idle">idle</button>
+        <button class="btn" data-state="scene_1">scene 1</button>
+        <button class="btn" data-state="scene_2">scene 2</button>
+        <button class="btn" data-state="end_game">end game</button>
+      </div>
+
+      <div id="conn" class="muted">Connecting…</div>
+    </section>
+<section class="card">
+  <h2>Relays</h2>
+  <div class="buttons" id="relayButtons">
+    <button class="btn" data-relay="relay_1" id="relay-btn-relay_1">relay 1</button>
+    <button class="btn" data-relay="relay_2" id="relay-btn-relay_2">relay 2</button>
+    <button class="btn" data-relay="relay_3" id="relay-btn-relay_3">relay 3</button>
+    <button class="btn" data-relay="relay_4" id="relay-btn-relay_4">relay 4</button>
+  </div>
+</section>
+
+    <section class="card">
+      <h2>Inputs</h2>
+      <ul class="list" id="list">
+        {% for label in inputs %}
+        <li class="row">
+          <span class="label">{{ label }}</span>
+          <span class="pill" id="pill-{{ label }}">…</span>
+        </li>
+        {% endfor %}
+      </ul>
+
+    </section>
+  </main>
+
+<script>
+  const connEl = document.getElementById("conn");
+  const gameStateEl = document.getElementById("gameState");
+  const timerEl = document.getElementById("timer");
+  const timerRunEl = document.getElementById("timerRun");
+  const shutdownBtn = document.getElementById("shutdownBtn");
+
+
+  let timer = { running: false, elapsed: 0 };
+  let timerBaseAt = performance.now();
+  let timerInterval = null;
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+
+  function renderTimer() {
+    const now = performance.now();
+    let elapsed = timer.elapsed;
+    if (timer.running) {
+      elapsed += (now - timerBaseAt) / 1000.0;
+    }
+    elapsed = Math.max(0, elapsed);
+
+    const total = Math.floor(elapsed);
+    const mm = Math.floor(total / 60);
+    const ss = total % 60;
+    timerEl.textContent = `${pad2(mm)}:${pad2(ss)}`;
+    timerRunEl.textContent = timer.running ? "running" : "stopped";
+  }
+
+  function applyTimer(newTimer) {
+    timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
+    timerBaseAt = performance.now();
+    if (!timerInterval) {
+      timerInterval = setInterval(renderTimer, 250);
+    }
+    renderTimer();
+  }
+
+  function setPill(label, state) {
+    const pill = document.getElementById(`pill-${label}`);
+    if (!pill) return;
+    pill.textContent = state;
+    pill.classList.toggle("active", state === "ACTIVE");
+    pill.classList.toggle("inactive", state === "INACTIVE");
+  }
+
+function setRelayButton(name, on) {
+  const btn = document.getElementById(`relay-btn-${name}`);
+  if (!btn) return;
+  btn.classList.toggle("active-state", !!on);
+}
+
+function setGameState(st) {
+  gameStateEl.textContent = st;
+
+  // highlight actieve state-knop
+  document.querySelectorAll("button[data-state]").forEach(btn => {
+    btn.classList.toggle("active-state", btn.dataset.state === st);
+  });
+
+  // shutdown-knop alleen zichtbaar in idle
+  if (st === "idle") {
+    shutdownBtn.classList.remove("hidden");
+  } else {
+    shutdownBtn.classList.add("hidden");
+  }
+}
+
+
+  async function loadInitial() {
+    const r = await fetch("/api/state", { cache: "no-store" });
+    const data = await r.json();
+    setGameState(data.game_state);
+    for (const [label, state] of Object.entries(data.inputs || {})) {
+      setPill(label, state);
+    }
+    for (const [name, on] of Object.entries(data.relays || {})) {
+      setRelayButton(name, on);
+    }
+    applyTimer(data.timer || { running:false, elapsed:0 });
+  }
+
+  async function setState(st) {
+    await fetch("/api/set_state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state: st })
+    });
+  }
+
+  // Button handlers
+  document.querySelectorAll("button[data-state]").forEach(btn => {
+    btn.addEventListener("click", () => setState(btn.dataset.state));
+  });
+
+  document.querySelectorAll("button[data-relay]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const name = btn.dataset.relay;
+      const r = await fetch("/api/relay/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      });
+      if (!r.ok) return;
+      const data = await r.json();
+      setRelayButton(data.name, data.on);
+    });
+  });
+
+shutdownBtn.addEventListener("click", async () => {
+  const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt afsluiten?");
+  if (!ok) return;
+
+  const r = await fetch("/api/poweroff", { method: "POST" });
+  if (r.ok) {
+    connEl.textContent = "Shutting down…";
+  }
+});
+
+
+
+  function connectSSE() {
+    const es = new EventSource("/events");
+
+    es.addEventListener("open", () => {
+      connEl.textContent = "Connected";
+      connEl.classList.remove("error");
+    });
+
+    es.addEventListener("error", () => {
+      connEl.textContent = "Disconnected (auto-retrying)";
+      connEl.classList.add("error");
+    });
+
+    es.onmessage = (msg) => {
+      try {
+        const evt = JSON.parse(msg.data);
+
+        if (evt.type === "input") {
+          setPill(evt.label, evt.state);
+        } else if (evt.type === "game_state") {
+          setGameState(evt.game_state);
+        } else if (evt.type === "timer") {
+          applyTimer(evt.timer);
+        } else if (evt.type === "full_state") {
+          setGameState(evt.game_state);
+          for (const [label, state] of Object.entries(evt.inputs || {})) {
+            setPill(label, state);
+          }
+          applyTimer(evt.timer || { running:false, elapsed:0 });
+        } else if (evt.type === "relay") {
+          setRelayButton(evt.name, evt.on);
+        } else if (evt.type === "relays" && evt.pattern) {
+          for (const [name, on] of Object.entries(evt.pattern)) {
+            setRelayButton(name, on);
+        }
+
+        }
+      } catch (e) {
+        // ignore garbage
+      }
+    };
+  }
+
+  (async () => {
+    await loadInitial();
+    connectSSE();
+  })();
+</script>
+</body>
+</html>
