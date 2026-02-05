@@ -1,3 +1,5 @@
+print("mqtt_sound module loaded")
+
 import json
 import paho.mqtt.client as mqtt
 
@@ -18,10 +20,12 @@ def _get_client():
     return _client
 
 def bg_start(filename: str):
+    print("BG_START called with", filename)
     payload = {"cmd": "start", "file": filename}
     _get_client().publish(TOPIC_BG, json.dumps(payload), qos=0)
 
 def bg_switch(filename: str):
+    print("BG_SWITCH called with", filename)
     payload = {"cmd": "switch", "file": filename}
     _get_client().publish(TOPIC_BG, json.dumps(payload), qos=0)
 
