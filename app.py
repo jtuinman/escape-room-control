@@ -6,9 +6,11 @@ import time
 import subprocess
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+from mqtt_sound import bg_start, bg_switch, hint_play, panic
 
 from flask import Flask, Response, jsonify, render_template, request
 from gpiozero import Button, OutputDevice
+
 
 # =========================
 # Escape room config 
@@ -448,6 +450,25 @@ def events():
         "X-Accel-Buffering": "no",
     })
 
+@app.route("/sound/state1")
+def sound_state1():
+    bg_start("state1.mp3")
+    return "OK"
+
+@app.route("/sound/state2")
+def sound_state2():
+    bg_switch("state2.mp3")
+    return "OK"
+
+@app.route("/sound/hint1")
+def sound_hint1():
+    hint_play("hint1.mp3")
+    return "OK"
+
+@app.route("/sound/panic")
+def sound_panic():
+    panic()
+    return "OK"
 
 def main() -> None:
     init_relays()
