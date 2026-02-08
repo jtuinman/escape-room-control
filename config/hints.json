@@ -3,7 +3,7 @@
     { "id": "s1_h1", "label": "Scene 1 - Hint 1", "file": "hint1.mp3" }
   ],
   "scene_2": [
-    { "id": "s2_h2", "label": "Scene 1 - Hint 2", "file": "hint2.mp3" }
+    { "id": "s2_h2", "label": "Scene 1 - Hint 2", "file": "hint2.mp3" },
     { "id": "s2_h1", "label": "Scene 2 - Hint 1", "file": "hint3.mp3" }
   ],
   "idle": []
