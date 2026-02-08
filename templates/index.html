@@ -45,6 +45,21 @@
     <button class="btn" data-relay="relay_4" id="relay-btn-relay_4">relay 4</button>
   </div>
 </section>
+<hr>
+
+<h3>Hints – {{ game_state }}</h3>
+
+{% if scene_hints %}
+  <div>
+    {% for h in scene_hints %}
+      <form method="get" action="/sound/hint/{{ h.id }}" style="display:inline-block; margin:4px;">
+        <button type="submit">{{ h.label }}</button>
+      </form>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>Geen hints beschikbaar voor deze scene.</p>
+{% endif %}
 
     <section class="card">
       <h2>Inputs</h2>
