@@ -210,7 +210,7 @@ function renderHints(gameState, hints) {
     return;
   }
 
-  for (const h of hints) {
+    for (const h of hints) {
     const li = document.createElement("li");
     li.className = "row compactRow hintItem";
     li.title = h.id || "";
@@ -219,16 +219,21 @@ function renderHints(gameState, hints) {
     label.className = "label";
     label.textContent = h.label || h.id;
 
-    li.appendChild(label);
+    const play = document.createElement("span");
+    play.className = "hintPlay";
+    play.textContent = "▶";
 
-    // klikbaar maar geen knop-look
+    li.appendChild(label);
+    li.appendChild(play);
+
+    // hele rij klikbaar
     li.style.cursor = "pointer";
     li.addEventListener("click", () => {
-      fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
+        fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
     });
 
     hintsEl.appendChild(li);
-  }
+    }
 }
 
 

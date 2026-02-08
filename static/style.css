@@ -66,3 +66,13 @@ h2 { margin: 0 0 10px; font-size: 16px; }
 .hintItem:hover {
   filter: brightness(0.97);
 }
+/* hint play icon */
+.hintPlay {
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+
+/* subtiele hover voor hele rij */
+.hintItem:hover {
+  background: rgba(0,0,0,0.04);
+}
