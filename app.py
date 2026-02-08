@@ -201,6 +201,7 @@ def set_game_state(new_state: str, reason: str) -> None:
         # - Starting scene_1 starts the timer ONLY if it is not running AND has not started before.
 
         if new_state == "idle":
+            panic()  # stop all sounds immediately when going idle
             timer_running = False
             timer_started_at = None
             timer_elapsed_base = 0.0
@@ -211,12 +212,14 @@ def set_game_state(new_state: str, reason: str) -> None:
             # If it's already running, do nothing (no reset).
             # If it was stopped by toggle_2 (end_game) and you DON'T want it to restart unless idle happened,
             # then also do nothing here when elapsed_base > 0.
-            bg_start("state1.mp3")
+            bg_start("state1.mp3") # Start state1 music when entering scene_1
             if (not timer_running) and (timer_started_at is None) and (timer_elapsed_base == 0.0):
                 timer_started_at = now_mono()
                 timer_running = True
         elif new_state == "scene_2":
-            bg_switch("state2.mp3")
+            bg_switch("state2.mp3") # Switch to state2 music when entering scene_2
+        elif new_state == "end_game":
+            bg_switch("state3.mp3") # Switch to state3 music when entering end_game
         # scene_2 and end_game: timer continues unchanged (no stop/reset here)
 
     apply_relay_pattern(new_state, reason=f"state:{reason}")
