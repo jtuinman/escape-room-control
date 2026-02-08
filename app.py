@@ -6,10 +6,12 @@ import time
 import subprocess
 from dataclasses import dataclass
 from typing import Dict, List, Optional
-from mqtt_sound import bg_start, bg_switch, hint_play, panic
+from mqtt_sound import bg_start, bg_switch, bg_stop, hint_play, panic
 
-from flask import Flask, Response, jsonify, render_template, request
+import re
+from flask import Flask, Response, jsonify, render_template, request, abort
 from gpiozero import Button, OutputDevice
+
 
 
 # =========================
@@ -352,6 +354,12 @@ def init_gpio() -> None:
     # Push an initial full snapshot
     publish_full_state(reason="boot")
 
+_BG_FILE_RE = re.compile(r"^state\d+\.mp3$", re.IGNORECASE)
+
+def _validate_bg_file(filename: str) -> str:
+    if not _BG_FILE_RE.match(filename):
+        abort(400, "Invalid background file")
+    return filename
 
 @app.route("/")
 def index():
@@ -450,15 +458,22 @@ def events():
         "X-Accel-Buffering": "no",
     })
 
-@app.route("/sound/state1")
-def sound_state1():
-    bg_start("state1.mp3")
-    return "OK"
+@app.route("/sound/bg/<action>/<filename>")
+def sound_bg(action, filename):
+    filename = _validate_bg_file(filename)
+    action = action.lower()
 
-@app.route("/sound/state2")
-def sound_state2():
-    bg_switch("state2.mp3")
-    return "OK"
+    if action == "start":
+        bg_start(filename)
+        return "OK"
+    if action == "switch":
+        bg_switch(filename)
+        return "OK"
+    if action == "stop":
+        bg_stop()
+        return "OK"
+
+    abort(400, "Invalid action")
 
 @app.route("/sound/hint1")
 def sound_hint1():
