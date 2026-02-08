@@ -518,6 +518,11 @@ def sound_panic():
     panic()
     return "OK"
 
+@app.route("/api/push_full_state")
+def api_push_full_state():
+    publish_full_state()
+    return "OK"
+
 def main() -> None:
     init_relays()
     init_gpio()
