@@ -385,8 +385,16 @@ def find_hint_by_id(hint_id: str):
 @app.route("/")
 def index():
     labels = list(INPUTS.keys())
-    return render_template("index.html", inputs=labels, states=list(VALID_GAME_STATES))
-
+    with lock:
+        gs = game_state
+    scene_hints = HINTS.get(gs, [])
+    return render_template(
+        "index.html",
+        inputs=labels,
+        states=list(VALID_GAME_STATES),
+        game_state=gs,
+        scene_hints=scene_hints,
+    )
 
 @app.route("/api/state")
 def api_state():
