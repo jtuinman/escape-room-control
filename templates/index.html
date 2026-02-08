@@ -8,60 +8,74 @@
 </head>
 <body>
   <main>
-<div class="header-row">
-  <h1>Escape Room Control</h1>
-  <button class="btn danger hidden" id="shutdownBtn" type="button">
-    shutdown pi
-  </button>
-</div>
-    <section class="card">
-      <div class="row">
-        <div>
-          <div class="muted">Game state</div>
-          <div id="gameState" class="big">…</div>
-        </div>
-        <div class="timerBox">
-          <div class="muted">Timer</div>
-          <div id="timer" class="big mono">00:00</div>
-          <div id="timerRun" class="muted">…</div>
-        </div>
+    <div class="header-row">
+      <h1>Escape Room Control</h1>
+      <button class="btn danger hidden" id="shutdownBtn" type="button">shutdown pi</button>
+    </div>
+
+    <!-- LAYOUT: 2 kolommen -->
+    <div class="layout">
+      <!-- LINKERKOLOM: spel + acties -->
+      <div class="col">
+        <section class="card">
+          <div class="row">
+            <div>
+              <div class="muted">Game state</div>
+              <div id="gameState" class="big">…</div>
+            </div>
+            <div class="timerBox">
+              <div class="muted">Timer</div>
+              <div id="timer" class="big mono">00:00</div>
+              <div id="timerRun" class="muted">…</div>
+            </div>
+          </div>
+
+          <div class="buttons">
+            <button class="btn" data-state="idle">idle</button>
+            <button class="btn" data-state="scene_1">scene 1</button>
+            <button class="btn" data-state="scene_2">scene 2</button>
+            <button class="btn" data-state="end_game">end game</button>
+          </div>
+
+          <div id="conn" class="muted">Connecting…</div>
+        </section>
+
+        <section class="card">
+          <h2>Relays</h2>
+          <div class="buttons" id="relayButtons">
+            <button class="btn" data-relay="relay_1" id="relay-btn-relay_1">relay 1</button>
+            <button class="btn" data-relay="relay_2" id="relay-btn-relay_2">relay 2</button>
+            <button class="btn" data-relay="relay_3" id="relay-btn-relay_3">relay 3</button>
+            <button class="btn" data-relay="relay_4" id="relay-btn-relay_4">relay 4</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="row" style="align-items:center; justify-content:space-between;">
+            <h2 style="margin:0;">Hints</h2>
+            <div class="muted">Scene: <span id="hints-scene"></span></div>
+          </div>
+          <ul id="hints" class="list compact"></ul>
+        </section>
       </div>
 
-      <div class="buttons">
-        <button class="btn" data-state="idle">idle</button>
-        <button class="btn" data-state="scene_1">scene 1</button>
-        <button class="btn" data-state="scene_2">scene 2</button>
-        <button class="btn" data-state="end_game">end game</button>
+      <!-- RECHTERKOLOM: realtime status -->
+      <div class="col">
+        <section class="card">
+          <h2>Inputs</h2>
+
+          <!-- Compact: 1 regel per input, rechts alleen een dot -->
+          <ul class="list compact" id="list">
+            {% for label in inputs %}
+            <li class="row compactRow">
+              <span class="label">{{ label }}</span>
+              <span class="dot unknown" id="dot-{{ label|replace(' ', '_') }}" title="…"></span>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
       </div>
-
-      <div id="conn" class="muted">Connecting…</div>
-    </section>
-<section class="card">
-  <h2>Relays</h2>
-  <div class="buttons" id="relayButtons">
-    <button class="btn" data-relay="relay_1" id="relay-btn-relay_1">relay 1</button>
-    <button class="btn" data-relay="relay_2" id="relay-btn-relay_2">relay 2</button>
-    <button class="btn" data-relay="relay_3" id="relay-btn-relay_3">relay 3</button>
-    <button class="btn" data-relay="relay_4" id="relay-btn-relay_4">relay 4</button>
-  </div>
-</section>
-<hr>
-
-<h3>Hints – <span id="hints-scene"></span></h3>
-<div id="hints"></div>
-
-    <section class="card">
-      <h2>Inputs</h2>
-      <ul class="list" id="list">
-        {% for label in inputs %}
-        <li class="row">
-          <span class="label">{{ label }}</span>
-          <span class="pill" id="pill-{{ label }}">…</span>
-        </li>
-        {% endfor %}
-      </ul>
-
-    </section>
+    </div>
   </main>
 
 <script>
@@ -70,7 +84,6 @@
   const timerEl = document.getElementById("timer");
   const timerRunEl = document.getElementById("timerRun");
   const shutdownBtn = document.getElementById("shutdownBtn");
-
 
   let timer = { running: false, elapsed: 0 };
   let timerBaseAt = performance.now();
@@ -81,9 +94,7 @@
   function renderTimer() {
     const now = performance.now();
     let elapsed = timer.elapsed;
-    if (timer.running) {
-      elapsed += (now - timerBaseAt) / 1000.0;
-    }
+    if (timer.running) elapsed += (now - timerBaseAt) / 1000.0;
     elapsed = Math.max(0, elapsed);
 
     const total = Math.floor(elapsed);
@@ -96,50 +107,50 @@
   function applyTimer(newTimer) {
     timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
     timerBaseAt = performance.now();
-    if (!timerInterval) {
-      timerInterval = setInterval(renderTimer, 250);
-    }
+    if (!timerInterval) timerInterval = setInterval(renderTimer, 250);
     renderTimer();
   }
 
-  function setPill(label, state) {
-    const pill = document.getElementById(`pill-${label}`);
-    if (!pill) return;
-    pill.textContent = state;
-    pill.classList.toggle("active", state === "ACTIVE");
-    pill.classList.toggle("inactive", state === "INACTIVE");
+  // INPUT STATUS -> DOTS (groen/rood)
+  function setInputDot(label, state) {
+    const safe = String(label).replaceAll(" ", "_");
+    const dot = document.getElementById(`dot-${safe}`);
+    if (!dot) return;
+
+    // reset
+    dot.classList.remove("active", "inactive", "unknown");
+    dot.title = state;
+
+    if (state === "ACTIVE") dot.classList.add("active");
+    else if (state === "INACTIVE") dot.classList.add("inactive");
+    else dot.classList.add("unknown");
   }
 
-function setRelayButton(name, on) {
-  const btn = document.getElementById(`relay-btn-${name}`);
-  if (!btn) return;
-  btn.classList.toggle("active-state", !!on);
-}
-
-function setGameState(st) {
-  gameStateEl.textContent = st;
-
-  // highlight actieve state-knop
-  document.querySelectorAll("button[data-state]").forEach(btn => {
-    btn.classList.toggle("active-state", btn.dataset.state === st);
-  });
-
-  // shutdown-knop alleen zichtbaar in idle
-  if (st === "idle") {
-    shutdownBtn.classList.remove("hidden");
-  } else {
-    shutdownBtn.classList.add("hidden");
+  function setRelayButton(name, on) {
+    const btn = document.getElementById(`relay-btn-${name}`);
+    if (!btn) return;
+    btn.classList.toggle("active-state", !!on);
   }
-}
 
+  function setGameState(st) {
+    gameStateEl.textContent = st;
+
+    document.querySelectorAll("button[data-state]").forEach(btn => {
+      btn.classList.toggle("active-state", btn.dataset.state === st);
+    });
+
+    if (st === "idle") shutdownBtn.classList.remove("hidden");
+    else shutdownBtn.classList.add("hidden");
+  }
 
   async function loadInitial() {
     const r = await fetch("/api/state", { cache: "no-store" });
     const data = await r.json();
     setGameState(data.game_state);
     renderHints(data.game_state, data.hints || []);
+
     for (const [label, state] of Object.entries(data.inputs || {})) {
-      setPill(label, state);
+      setInputDot(label, state);
     }
     for (const [name, on] of Object.entries(data.relays || {})) {
       setRelayButton(name, on);
@@ -155,7 +166,6 @@ function setGameState(st) {
     });
   }
 
-  // Button handlers
   document.querySelectorAll("button[data-state]").forEach(btn => {
     btn.addEventListener("click", () => setState(btn.dataset.state));
   });
@@ -174,16 +184,15 @@ function setGameState(st) {
     });
   });
 
-shutdownBtn.addEventListener("click", async () => {
-  const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt afsluiten?");
-  if (!ok) return;
+  shutdownBtn.addEventListener("click", async () => {
+    const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt afsluiten?");
+    if (!ok) return;
 
-  const r = await fetch("/api/poweroff", { method: "POST" });
-  if (r.ok) {
-    connEl.textContent = "Shutting down…";
-  }
-});
+    const r = await fetch("/api/poweroff", { method: "POST" });
+    if (r.ok) connEl.textContent = "Shutting down…";
+  });
 
+  // HINTS: 1 per regel, full-width
 function renderHints(gameState, hints) {
   const sceneEl = document.getElementById("hints-scene");
   const hintsEl = document.getElementById("hints");
@@ -194,20 +203,39 @@ function renderHints(gameState, hints) {
   hintsEl.innerHTML = "";
 
   if (!hints || hints.length === 0) {
-    hintsEl.textContent = "Geen hints voor deze scene.";
+    const li = document.createElement("li");
+    li.className = "row compactRow";
+    li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+    hintsEl.appendChild(li);
     return;
   }
 
-  for (const h of hints) {
-    const btn = document.createElement("button");
-    btn.className = "btn";
-    btn.style.display = "block";   // <-- dit dwingt 1 per regel
-    btn.style.width = "100%";      // <-- zelfde breedte als inputs
-    btn.textContent = h.label || h.id;
-    btn.onclick = () => fetch(`/sound/hint/${h.id}`);
-    hintsEl.appendChild(btn);
-  }
+    for (const h of hints) {
+    const li = document.createElement("li");
+    li.className = "row compactRow hintItem";
+    li.title = h.id || "";
+
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = h.label || h.id;
+
+    const play = document.createElement("span");
+    play.className = "hintPlay";
+    play.textContent = "▶";
+
+    li.appendChild(label);
+    li.appendChild(play);
+
+    // hele rij klikbaar
+    li.style.cursor = "pointer";
+    li.addEventListener("click", () => {
+        fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
+    });
+
+    hintsEl.appendChild(li);
+    }
 }
+
 
   function connectSSE() {
     const es = new EventSource("/events");
@@ -222,13 +250,12 @@ function renderHints(gameState, hints) {
       connEl.classList.add("error");
     });
 
-
     es.onmessage = (msg) => {
       try {
         const evt = JSON.parse(msg.data);
 
         if (evt.type === "input") {
-          setPill(evt.label, evt.state);
+          setInputDot(evt.label, evt.state);
         } else if (evt.type === "game_state") {
           setGameState(evt.game_state);
         } else if (evt.type === "timer") {
@@ -236,7 +263,7 @@ function renderHints(gameState, hints) {
         } else if (evt.type === "full_state") {
           setGameState(evt.game_state);
           for (const [label, state] of Object.entries(evt.inputs || {})) {
-            setPill(label, state);
+            setInputDot(label, state);
           }
           renderHints(evt.game_state, evt.hints || []);
           applyTimer(evt.timer || { running:false, elapsed:0 });
@@ -245,13 +272,11 @@ function renderHints(gameState, hints) {
         } else if (evt.type === "relays" && evt.pattern) {
           for (const [name, on] of Object.entries(evt.pattern)) {
             setRelayButton(name, on);
+          }
         }
-
-        }
-      } catch (e) {
-        // ignore garbage
-      }
+      } catch (e) {}
     };
+
     fetch("/api/push_full_state").catch(() => {});
   }
 
