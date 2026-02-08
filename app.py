@@ -375,6 +375,12 @@ def load_hints_config():
 
 HINTS = load_hints_config()
 
+def find_hint_by_id(hint_id: str):
+    for scene, hints in HINTS.items():
+        for h in hints:
+            if h.get("id") == hint_id:
+                return h
+    return None
 
 @app.route("/")
 def index():
@@ -489,6 +495,15 @@ def sound_bg(action, filename):
         return "OK"
 
     abort(400, "Invalid action")
+
+@app.route("/sound/hint/<hint_id>")
+def sound_hint_by_id(hint_id):
+    h = find_hint_by_id(hint_id)
+    if not h:
+        return "Unknown hint", 404
+    hint_play(h["file"])
+    return "OK"
+
 
 @app.route("/sound/hint1")
 def sound_hint1():
