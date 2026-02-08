@@ -200,7 +200,9 @@ function renderHints(gameState, hints) {
 
   for (const h of hints) {
     const btn = document.createElement("button");
-    btn.className = "btn";   // <-- belangrijk
+    btn.className = "btn";
+    btn.style.display = "block";   // <-- dit dwingt 1 per regel
+    btn.style.width = "100%";      // <-- zelfde breedte als inputs
     btn.textContent = h.label || h.id;
     btn.onclick = () => fetch(`/sound/hint/${h.id}`);
     hintsEl.appendChild(btn);
