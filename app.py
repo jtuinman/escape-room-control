@@ -524,6 +524,17 @@ def api_push_full_state():
     publish_full_state(reason="client_refresh")
     return "OK"
 
+@app.route("/proposal")
+def proposal():
+    labels = list(INPUTS.keys())
+    with lock:
+        gs = game_state
+    return render_template(
+        "index_new.html",
+        inputs=labels,
+        game_state=gs,
+    )
+
 def main() -> None:
     init_relays()
     init_gpio()
