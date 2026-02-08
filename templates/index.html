@@ -245,11 +245,11 @@ function renderHints(gameState, hints) {
         }
 
         }
-        fetch("/api/push_full_state").catch(() => {});
       } catch (e) {
         // ignore garbage
       }
     };
+    fetch("/api/push_full_state").catch(() => {});
   }
 
   (async () => {

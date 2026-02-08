@@ -520,7 +520,7 @@ def sound_panic():
 
 @app.route("/api/push_full_state")
 def api_push_full_state():
-    publish_full_state()
+    publish_full_state(reason="client_refresh")
     return "OK"
 
 def main() -> None:
