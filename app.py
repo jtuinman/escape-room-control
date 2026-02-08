@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os 
 import queue
 import threading
 import time
@@ -365,6 +366,15 @@ def _validate_bg_file(filename: str) -> str:
     if not _BG_FILE_RE.match(filename):
         abort(400, "Invalid background file")
     return filename
+
+HINTS_CONFIG_PATH = os.path.join("config", "hints.json")
+
+def load_hints_config():
+    with open(HINTS_CONFIG_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+HINTS = load_hints_config()
+
 
 @app.route("/")
 def index():
