@@ -137,6 +137,7 @@ def publish_full_state(reason: str) -> None:
         "reason": reason,
         "game_state": game_state,
         "inputs": dict(current_inputs),
+        "hints": HINTS.get(game_state, []),
         "timer": {
             "running": timer_running,
             "elapsed": get_timer_elapsed(),
@@ -510,12 +511,6 @@ def sound_hint_by_id(hint_id):
     if not h:
         return "Unknown hint", 404
     hint_play(h["file"])
-    return "OK"
-
-
-@app.route("/sound/hint1")
-def sound_hint1():
-    hint_play("hint1.mp3")
     return "OK"
 
 @app.route("/sound/panic")
