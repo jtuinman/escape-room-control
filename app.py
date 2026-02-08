@@ -44,7 +44,7 @@ RELAYS = {
 }
 # Relay patterns per game state (True=ON, False=OFF)
 RELAY_PATTERNS = {
-    "idle":     {"relay_1": False, "relay_2": False, "relay_3": False, "relay_4": False},
+    "idle":     {"relay_1": True, "relay_2": True, "relay_3": True, "relay_4": True},
     "scene_1":  {"relay_1": True,  "relay_2": False, "relay_3": True,  "relay_4": False},
     "scene_2":  {"relay_1": True,  "relay_2": True,  "relay_3": False, "relay_4": True},
     "end_game": {"relay_1": False, "relay_2": False, "relay_3": True,  "relay_4": True},
