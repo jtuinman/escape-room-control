@@ -404,6 +404,7 @@ def api_state():
             "game_state": game_state,
             "inputs": dict(current_inputs),
             "relays": dict(current_relays),
+            "hints": HINTS.get(game_state, []),
             "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
         })
 
