@@ -183,7 +183,28 @@ shutdownBtn.addEventListener("click", async () => {
   }
 });
 
+function renderHints(gameState, hints) {
+  const sceneEl = document.getElementById("hints-scene");
+  const hintsEl = document.getElementById("hints");
 
+  if (sceneEl) sceneEl.textContent = gameState || "";
+  if (!hintsEl) return;
+
+  hintsEl.innerHTML = "";
+
+  if (!hints || hints.length === 0) {
+    hintsEl.textContent = "Geen hints voor deze scene.";
+    return;
+  }
+
+  for (const h of hints) {
+    const btn = document.createElement("button");
+    btn.textContent = h.label || h.id;
+    btn.onclick = () => fetch(`/sound/hint/${h.id}`);
+    btn.style.margin = "4px";
+    hintsEl.appendChild(btn);
+  }
+}
 
   function connectSSE() {
     const es = new EventSource("/events");
@@ -197,6 +218,7 @@ shutdownBtn.addEventListener("click", async () => {
       connEl.textContent = "Disconnected (auto-retrying)";
       connEl.classList.add("error");
     });
+
 
     es.onmessage = (msg) => {
       try {
@@ -213,6 +235,7 @@ shutdownBtn.addEventListener("click", async () => {
           for (const [label, state] of Object.entries(evt.inputs || {})) {
             setPill(label, state);
           }
+          renderHints(evt.game_state, evt.hints || []);
           applyTimer(evt.timer || { running:false, elapsed:0 });
         } else if (evt.type === "relay") {
           setRelayButton(evt.name, evt.on);
