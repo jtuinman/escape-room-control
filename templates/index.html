@@ -137,6 +137,7 @@ function setGameState(st) {
     const r = await fetch("/api/state", { cache: "no-store" });
     const data = await r.json();
     setGameState(data.game_state);
+    renderHints(data.game_state, data.hints || []);
     for (const [label, state] of Object.entries(data.inputs || {})) {
       setPill(label, state);
     }
