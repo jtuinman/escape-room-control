@@ -55,8 +55,7 @@
             <h2 style="margin:0;">Hints</h2>
             <div class="muted">Scene: <span id="hints-scene"></span></div>
           </div>
-
-          <div id="hints" class="hintsList"></div>
+          <ul id="hints" class="list compact"></ul>
         </section>
       </div>
 
@@ -194,33 +193,44 @@
   });
 
   // HINTS: 1 per regel, full-width
-  function renderHints(gameState, hints) {
-    const sceneEl = document.getElementById("hints-scene");
-    const hintsEl = document.getElementById("hints");
+function renderHints(gameState, hints) {
+  const sceneEl = document.getElementById("hints-scene");
+  const hintsEl = document.getElementById("hints");
 
-    if (sceneEl) sceneEl.textContent = gameState || "";
-    if (!hintsEl) return;
+  if (sceneEl) sceneEl.textContent = gameState || "";
+  if (!hintsEl) return;
 
-    hintsEl.innerHTML = "";
+  hintsEl.innerHTML = "";
 
-    if (!hints || hints.length === 0) {
-      const p = document.createElement("p");
-      p.className = "muted";
-      p.textContent = "Geen hints voor deze scene.";
-      hintsEl.appendChild(p);
-      return;
-    }
-
-    for (const h of hints) {
-      const btn = document.createElement("button");
-      btn.className = "btn";
-      btn.style.display = "block";
-      btn.style.width = "100%";
-      btn.textContent = h.label || h.id;
-      btn.onclick = () => fetch(`/sound/hint/${h.id}`);
-      hintsEl.appendChild(btn);
-    }
+  if (!hints || hints.length === 0) {
+    const li = document.createElement("li");
+    li.className = "row compactRow";
+    li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+    hintsEl.appendChild(li);
+    return;
   }
+
+  for (const h of hints) {
+    const li = document.createElement("li");
+    li.className = "row compactRow hintItem";
+    li.title = h.id || "";
+
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = h.label || h.id;
+
+    li.appendChild(label);
+
+    // klikbaar maar geen knop-look
+    li.style.cursor = "pointer";
+    li.addEventListener("click", () => {
+      fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
+    });
+
+    hintsEl.appendChild(li);
+  }
+}
+
 
   function connectSSE() {
     const es = new EventSource("/events");
