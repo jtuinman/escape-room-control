@@ -449,7 +449,9 @@ def api_relay_toggle():
 @app.route("/api/poweroff", methods=["POST"])
 def api_poweroff():
     # Only allow shutdown when game is idle
-    if game_state != "idle":
+    with lock:
+        is_idle = (game_state == "idle")
+    if not is_idle:
         return jsonify({"ok": False, "error": "not_idle"}), 403
 
     broadcaster.publish({
