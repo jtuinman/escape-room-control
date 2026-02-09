@@ -13,6 +13,7 @@ import re
 from flask import Flask, Response, jsonify, render_template, request, abort
 from gpiozero import Button, OutputDevice
 
+last_soundmachine_seen = 0.0  # unix timestamp, 0 = never
 
 
 # =========================
@@ -137,6 +138,7 @@ def publish_full_state(reason: str) -> None:
         "game_state": game_state,
         "inputs": dict(current_inputs),
         "hints": HINTS.get(game_state, []),
+        "soundmachine_ok": (time.time() - last_soundmachine_seen) < 10.0,
         "timer": {
             "running": timer_running,
             "elapsed": get_timer_elapsed(),
