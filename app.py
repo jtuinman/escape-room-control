@@ -490,15 +490,21 @@ def events():
         "X-Accel-Buffering": "no",
     })
 
+@app.route("/sound/bg/<action>", defaults={"filename": None})
 @app.route("/sound/bg/<action>/<filename>")
 def sound_bg(action, filename):
-    filename = _validate_bg_file(filename)
     action = action.lower()
 
     if action == "start":
+        if not filename:
+            abort(400, "Missing background file")
+        filename = _validate_bg_file(filename)
         bg_start(filename)
         return "OK"
     if action == "switch":
+        if not filename:
+            abort(400, "Missing background file")
+        filename = _validate_bg_file(filename)
         bg_switch(filename)
         return "OK"
     if action == "stop":
