@@ -22,7 +22,6 @@ HOST = "0.0.0.0"
 PORT = 8000
 
 # GPIO inputs (BCM numbering)
-# IMPORTANT: You did NOT provide toggle_2 pin. Defaulting to 23. Change if needed.
 INPUTS = {
     "pushbutton 1": {"pin": 17, "bounce_time": 0.05, "role": "pb1"},
     "pushbutton 2": {"pin": 27, "bounce_time": 0.05, "role": "pb2"},
