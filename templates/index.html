@@ -10,8 +10,6 @@
   <main>
     <div class="header-row">
       <h1>Escape Room Control</h1>
-      <button class="btn warn hidden" id="rebootBtn" type="button">reboot pi</button>
-      <button class="btn danger hidden" id="shutdownBtn" type="button">shutdown pi</button>
     </div>
 
     <!-- LAYOUT: 2 kolommen -->
@@ -77,10 +75,14 @@
         </section>
 
         <section class="card">
-          <h2>Soundmachine</h2>
+          <h2>Critical</h2>
           <div class="row compactRow">
-            <span class="muted">Status</span>
+            <span class="muted">Soundmachine status</span>
             <span id="soundDot" class="dot unknown" title="unknown"></span>
+          </div>
+          <div class="buttons">
+            <button class="btn warn hidden" id="rebootBtn" type="button">reboot pi</button>
+            <button class="btn danger hidden" id="shutdownBtn" type="button">shutdown pi</button>
           </div>
         </section>
       </div>
