@@ -207,7 +207,6 @@ def set_game_state(new_state: str, reason: str) -> None:
             timer_running = False
             timer_started_at = None
             timer_elapsed_base = 0.0
-            apply_relay_pattern("idle", reason="entered_idle")
         
         elif new_state == "scene_1":
             # Start timer ONLY if it has never started and is not running.
@@ -523,17 +522,6 @@ def sound_panic():
 def api_push_full_state():
     publish_full_state(reason="client_refresh")
     return "OK"
-
-@app.route("/proposal")
-def proposal():
-    labels = list(INPUTS.keys())
-    with lock:
-        gs = game_state
-    return render_template(
-        "index_new.html",
-        inputs=labels,
-        game_state=gs,
-    )
 
 def main() -> None:
     init_relays()
