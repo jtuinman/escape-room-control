@@ -38,6 +38,10 @@
           </div>
 
           <div id="conn" class="muted">Connecting…</div>
+          <div class="row compactRow" style="margin-top:8px;">
+            <span class="muted">Soundmachine</span>
+            <span id="soundDot" class="dot unknown" title="unknown"></span>
+          </div>
         </section>
 
         <section class="card">
@@ -147,6 +151,19 @@
     const r = await fetch("/api/state", { cache: "no-store" });
     const data = await r.json();
     setGameState(data.game_state);
+      // soundmachine status dot
+    const sd = document.getElementById("soundDot");
+    if (sd) {
+      sd.classList.remove("active", "inactive", "unknown");
+      if (data.soundmachine_ok) {
+        sd.classList.add("active");
+        sd.title = "ok";
+      } else {
+        sd.classList.add("inactive");
+        sd.title = "down";
+      }
+    }
+
     renderHints(data.game_state, data.hints || []);
 
     for (const [label, state] of Object.entries(data.inputs || {})) {
@@ -267,6 +284,17 @@ function renderHints(gameState, hints) {
           }
           renderHints(evt.game_state, evt.hints || []);
           applyTimer(evt.timer || { running:false, elapsed:0 });
+          const sd = document.getElementById("soundDot");
+          if (sd) {
+            sd.classList.remove("active", "inactive", "unknown");
+            if (evt.soundmachine_ok) {
+              sd.classList.add("active");
+              sd.title = "ok";
+            } else {
+              sd.classList.add("inactive");
+              sd.title = "down";
+            }
+          }
         } else if (evt.type === "relay") {
           setRelayButton(evt.name, evt.on);
         } else if (evt.type === "relays" && evt.pattern) {
