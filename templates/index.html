@@ -10,6 +10,7 @@
   <main>
     <div class="header-row">
       <h1>Escape Room Control</h1>
+      <button class="btn warn hidden" id="rebootBtn" type="button">reboot pi</button>
       <button class="btn danger hidden" id="shutdownBtn" type="button">shutdown pi</button>
     </div>
 
@@ -92,6 +93,7 @@
   const timerEl = document.getElementById("timer");
   const timerRunEl = document.getElementById("timerRun");
   const shutdownBtn = document.getElementById("shutdownBtn");
+  const rebootBtn = document.getElementById("rebootBtn");
 
   let timer = { running: false, elapsed: 0 };
   let timerBaseAt = performance.now();
@@ -147,8 +149,13 @@
       btn.classList.toggle("active-state", btn.dataset.state === st);
     });
 
-    if (st === "idle") shutdownBtn.classList.remove("hidden");
-    else shutdownBtn.classList.add("hidden");
+    if (st === "idle") { 
+      shutdownBtn.classList.remove("hidden");
+      rebootBtn.classList.remove("hidden");
+    } else {
+      shutdownBtn.classList.add("hidden");
+      rebootBtn.classList.add("hidden");  
+    }
   }
 
   async function loadInitial() {
@@ -211,6 +218,14 @@
 
     const r = await fetch("/api/poweroff", { method: "POST" });
     if (r.ok) connEl.textContent = "Shutting down…";
+  });
+
+  rebootBtn.addEventListener("click", async () => {
+    const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt herstarten?");
+    if (!ok) return;
+
+    const r = await fetch("/api/reboot", { method: "POST" });
+    if (r.ok) connEl.textContent = "Rebooting…";
   });
 
   // HINTS: 1 per regel, full-width

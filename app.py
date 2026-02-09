@@ -494,6 +494,25 @@ def api_poweroff():
 
     return jsonify({"ok": True})
 
+@app.route("/api/reboot", methods=["POST"])
+def api_reboot():
+    # Alleen reboot wanneer game idle is
+    if game_state != "idle":
+        return jsonify({"ok": False, "error": "not_idle"}), 403
+
+    broadcaster.publish({
+        "type": "system",
+        "action": "reboot",
+        "reason": "admin_request",
+        "ts": time.time(),
+    })
+
+    try:
+        subprocess.Popen(["sudo", "/usr/sbin/reboot"])
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    return jsonify({"ok": True})
 
 @app.route("/events")
 def events():
