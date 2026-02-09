@@ -15,7 +15,7 @@ from flask import Flask, Response, jsonify, render_template, request, abort
 from gpiozero import Button, OutputDevice
 
 last_soundmachine_seen = 0.0  # unix timestamp, 0 = never
-SOUNDMACHINE_MQTT_HOST = "soundmachine"
+SOUNDMACHINE_MQTT_HOST = "192.168.68.127"
 SOUNDMACHINE_MQTT_PORT = 1883
 SOUNDMACHINE_STATUS_TOPIC = "escape/audio/status"
 
