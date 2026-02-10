@@ -76,10 +76,6 @@
 
         <section class="card">
           <h2>Critical</h2>
-          <div class="row compactRow">
-            <span class="muted">Soundmachine status</span>
-            <span id="soundDot" class="dot unknown" title="unknown"></span>
-          </div>
           <div class="buttons">
             <button class="btn warn hidden" id="rebootBtn" type="button">reboot pi</button>
             <button class="btn danger hidden" id="shutdownBtn" type="button">shutdown pi</button>
@@ -164,18 +160,6 @@
     const r = await fetch("/api/state", { cache: "no-store" });
     const data = await r.json();
     setGameState(data.game_state);
-      // soundmachine status dot
-    const sd = document.getElementById("soundDot");
-    if (sd) {
-      sd.classList.remove("active", "inactive", "unknown");
-      if (data.soundmachine_ok) {
-        sd.classList.add("active");
-        sd.title = "ok";
-      } else {
-        sd.classList.add("inactive");
-        sd.title = "down";
-      }
-    }
 
     renderHints(data.game_state, data.hints || []);
 
@@ -305,34 +289,11 @@ function renderHints(gameState, hints) {
           }
           renderHints(evt.game_state, evt.hints || []);
           applyTimer(evt.timer || { running:false, elapsed:0 });
-          const sd = document.getElementById("soundDot");
-          if (sd) {
-            sd.classList.remove("active", "inactive", "unknown");
-            if (evt.soundmachine_ok) {
-              sd.classList.add("active");
-              sd.title = "ok";
-            } else {
-              sd.classList.add("inactive");
-              sd.title = "down";
-            }
-          }
         } else if (evt.type === "relay") {
           setRelayButton(evt.name, evt.on);
         } else if (evt.type === "relays" && evt.pattern) {
           for (const [name, on] of Object.entries(evt.pattern)) {
             setRelayButton(name, on);
-          }
-        } else if (evt.type === "soundmachine") {
-          const sd = document.getElementById("soundDot");
-          if (sd) {
-            sd.classList.remove("active", "inactive", "unknown");
-            if (evt.soundmachine_ok) {
-              sd.classList.add("active");
-              sd.title = "ok";
-            } else {
-              sd.classList.add("inactive");
-              sd.title = "down";
-            }
           }
         }
 

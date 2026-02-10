@@ -8,16 +8,10 @@ import subprocess
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 from mqtt_sound import bg_start, bg_switch, bg_stop, hint_play, panic
-import paho.mqtt.client as mqtt
 
 import re
 from flask import Flask, Response, jsonify, render_template, request, abort
 from gpiozero import Button, OutputDevice
-
-last_soundmachine_seen = 0.0  # unix timestamp, 0 = never
-SOUNDMACHINE_MQTT_HOST = "192.168.68.127"
-SOUNDMACHINE_MQTT_PORT = 1883
-SOUNDMACHINE_STATUS_TOPIC = "escape/audio/status"
 
 # =========================
 # Escape room config 
@@ -141,7 +135,6 @@ def publish_full_state(reason: str) -> None:
         "game_state": game_state,
         "inputs": dict(current_inputs),
         "hints": HINTS.get(game_state, []),
-        "soundmachine_ok": (time.time() - last_soundmachine_seen) < 10.0,
         "timer": {
             "running": timer_running,
             "elapsed": get_timer_elapsed(),
@@ -386,27 +379,6 @@ def find_hint_by_id(hint_id: str):
                 return h
     return None
 
-def start_soundmachine_status_listener():
-    def on_message(client, userdata, msg):
-        global last_soundmachine_seen
-        last_soundmachine_seen = time.time()
-
-        # Push a lightweight SSE update so the UI dot changes immediately
-        broadcaster.publish({
-            "type": "soundmachine",
-            "soundmachine_ok": True
-        })
-
-    def worker():
-        client = mqtt.Client()
-        client.on_message = on_message
-        client.connect(SOUNDMACHINE_MQTT_HOST, SOUNDMACHINE_MQTT_PORT, keepalive=30)
-        client.subscribe(SOUNDMACHINE_STATUS_TOPIC, qos=0)
-        client.loop_forever()
-
-    t = threading.Thread(target=worker, daemon=True)
-    t.start()
-
 @app.route("/")
 def index():
     labels = list(INPUTS.keys())
@@ -579,7 +551,6 @@ def main() -> None:
     init_relays()
     init_gpio()
     set_game_state("idle", reason="boot_to_idle")
-    start_soundmachine_status_listener()
     app.run(host=HOST, port=PORT, debug=False, threaded=True)
 
 
