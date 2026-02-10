@@ -8,8 +8,7 @@
     { "id": "s2_h2", "label": "Scene 2 - Hint 3", "file": "hint3.mp3" }
   ],
   "end_game": [
-    { "id": "eg_h1", "label": "End game - Hint 1", "file": "hint1.mp3" },
-    { "id": "eg_h2", "label": "End game - movie 1", "file": "movie1.mp4" }
+    { "id": "eg_h1", "label": "End game - Hint 1", "file": "hint1.mp3" }
   ],
   "idle": []
 }
