@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Set timer to initiate return sequence</title>
+  <link rel="stylesheet" href="/static/panel.css">
+</head>
+<body>
+  <main class="panelWrap">
+    <header class="titlebar">
+      <h1>Set timer to initiate return sequence</h1>
+      <div class="subtitle">TEMPORAL CONTROL INTERFACE</div>
+    </header>
+
+    <section class="panel">
+      <div class="rivet r1"></div><div class="rivet r2"></div><div class="rivet r3"></div><div class="rivet r4"></div>
+
+      <div class="top">
+        <div class="displayShell">
+          <div class="labelRow">
+            <span class="tag">CHRONO</span>
+            <span class="labelText">Sequence Register</span>
+          </div>
+          <div id="display" class="display">0000</div>
+        </div>
+
+        <div class="ledBar">
+          <div class="ledUnit">
+            <div class="ledName">GREEN</div>
+            <div id="ledGreen" class="led"></div>
+          </div>
+          <div class="ledUnit">
+            <div id="ledRed" class="led"></div>
+            <div class="ledName">RED</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div id="buttonsMain" class="mainButtons"></div>
+
+        <div class="sideButtons">
+          <button id="btn9" class="actionBtn check" aria-label="Check">
+            <span class="actionGlyph">✔</span>
+            <span class="actionLabel">CHECK</span>
+          </button>
+
+          <button id="btn10" class="actionBtn reset" aria-label="Reset">
+            <span class="actionGlyph">⟲</span>
+            <span class="actionLabel">RESET</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="timerBox">
+        <div class="timerLeft">
+          <span class="tag">T+ </span>
+          <span class="timerTitle">Elapsed</span>
+          <span id="timerState" class="timerState">(ARMED)</span>
+        </div>
+        <div id="timerValue" class="timerValue">00:00.000</div>
+      </div>
+
+      <footer class="badges">
+        <span class="badge">INTERLOCK: ENGAGED</span>
+        <span class="badge">FLUX: STABLE</span>
+        <span class="badge">COIL TEMP: NOMINAL</span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    // Config
+    const buttonValues = { 1:5, 2:-3, 3:1, 4:-4, 5:7, 6:2, 7:-3, 8:6 };
+    const targetScore = 15;
+
+    // Puzzle state
+    let score = 0;
+    const usedButtons = new Set(); // 1..8 count once (invisible)
+    let solved = false;            // green => everything dead until refresh
+
+    // Timer state (starts once on first press of 1..8, stops on green, never resets via reset)
+    let timerStarted = false;
+    let timerStartMs = 0;
+    let timerRaf = null;
+
+    // Elements
+    const displayEl = document.getElementById("display");
+    const ledGreenEl = document.getElementById("ledGreen");
+    const ledRedEl = document.getElementById("ledRed");
+    const buttonsMain = document.getElementById("buttonsMain");
+    const timerValueEl = document.getElementById("timerValue");
+    const timerStateEl = document.getElementById("timerState");
+
+    function clampScore(){ if (score < 0) score = 0; }
+    function format4(n){ return String(Math.max(0, Math.floor(n))).padStart(4, "0").slice(-4); }
+
+    function setLED(greenOn, redOn){
+      ledGreenEl.classList.toggle("on", !!greenOn);
+      ledRedEl.classList.toggle("on", !!redOn);
+      ledGreenEl.classList.toggle("green", true);
+      ledRedEl.classList.toggle("red", true);
+    }
+
+    function updateUI(){
+      displayEl.textContent = format4(score);
+    }
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function pad3(n){ return String(n).padStart(3,"0"); }
+    function formatElapsed(ms){
+      const total = Math.max(0, Math.floor(ms));
+      const minutes = Math.floor(total / 60000);
+      const seconds = Math.floor((total % 60000) / 1000);
+      const millis  = total % 1000;
+      return `${pad2(minutes)}:${pad2(seconds)}.${pad3(millis)}`;
+    }
+
+    function tickTimer(){
+      if (!timerStarted || solved) return;
+      timerValueEl.textContent = formatElapsed(performance.now() - timerStartMs);
+      timerRaf = requestAnimationFrame(tickTimer);
+    }
+
+    function startTimerOnce(){
+      if (timerStarted) return; // only restarts on refresh
+      timerStarted = true;
+      timerStartMs = performance.now();
+      timerStateEl.textContent = "(RUNNING)";
+      timerRaf = requestAnimationFrame(tickTimer);
+    }
+
+    function stopTimer(){
+      if (!timerStarted) return;
+      if (timerRaf) cancelAnimationFrame(timerRaf);
+      timerRaf = null;
+      timerStateEl.textContent = "(STOPPED)";
+    }
+
+    function pressButton1to8(i){
+      if (solved) return;
+      startTimerOnce();
+      if (usedButtons.has(i)) return;
+
+      score += (buttonValues[i] ?? 0);
+      clampScore();
+      usedButtons.add(i);
+      updateUI();
+    }
+
+    function checkScore(){
+      if (solved) return;
+
+      if (score === targetScore){
+        solved = true;
+        setLED(true, false);
+        stopTimer();
+      } else {
+        setLED(false, true);
+      }
+    }
+
+    function resetPuzzle(){
+      if (solved) return; // after green: only refresh resets
+      score = 0;
+      usedButtons.clear();
+      setLED(false, true);
+      updateUI();
+      // timer does NOT reset
+    }
+
+    function makeBlankButton(id, onClick){
+      const b = document.createElement("button");
+      b.id = id;
+      b.className = "mainBtn";
+      b.setAttribute("aria-label", id);
+      b.addEventListener("click", onClick);
+      return b;
+    }
+
+    // Build main buttons 1..8 (blank)
+    for (let i = 1; i <= 8; i++){
+      buttonsMain.appendChild(makeBlankButton(`btn${i}`, () => pressButton1to8(i)));
+    }
+
+    // Hook check/reset
+    document.getElementById("btn9").addEventListener("click", checkScore);
+    document.getElementById("btn10").addEventListener("click", resetPuzzle);
+
+    // Init
+    setLED(false, true);
+    updateUI();
+    timerValueEl.textContent = "00:00.000";
+    timerStateEl.textContent = "(ARMED)";
+  </script>
+</body>
+</html>

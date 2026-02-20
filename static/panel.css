@@ -1,0 +1,365 @@
+/* Time-machine sci-fi control panel */
+
+:root{
+  --bg0:#05070d;
+  --bg1:#0b0f1a;
+  --bg2:#11182a;
+
+  --panel:#0e1526;
+  --panelEdge:#1c2744;
+
+  --text:#e6ecff;
+  --muted:#9fb0d6;
+
+  --cyan:#67d8ff;
+  --green:#2cff9c;
+  --red:#ff3b5c;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  color:var(--text);
+  background:
+    radial-gradient(900px 600px at 15% 10%, rgba(103,216,255,.12), transparent 60%),
+    radial-gradient(800px 500px at 85% 20%, rgba(44,255,156,.10), transparent 55%),
+    radial-gradient(900px 600px at 50% 95%, rgba(255,59,92,.10), transparent 60%),
+    linear-gradient(180deg, var(--bg0), var(--bg2));
+  display:flex;
+  justify-content:center;
+  padding:18px;
+}
+
+.panelWrap{
+  width:min(480px, 100%);
+  display:grid;
+  gap:14px;
+}
+
+.titlebar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+h1{
+  margin:0;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:clamp(18px, 5vw, 30px);
+  color:#dfe8ff;
+}
+
+.subtitle{
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.panel{
+  position:relative;
+  border-radius:18px;
+  padding:16px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), transparent 35%),
+    linear-gradient(180deg, var(--panel), #070c18);
+  border:1px solid var(--panelEdge);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.7),
+    inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+/* subtle tech grid */
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+  background-size:40px 40px;
+  opacity:.25;
+  pointer-events:none;
+}
+
+/* corner screws */
+.rivet{
+  position:absolute;
+  width:10px; height:10px;
+  border-radius:50%;
+  background:linear-gradient(180deg,#9fb3ff,#3c4c86);
+  box-shadow:0 0 6px rgba(103,216,255,.6);
+}
+.r1{ top:10px; left:10px; }
+.r2{ top:10px; right:10px; }
+.r3{ bottom:10px; left:10px; }
+.r4{ bottom:10px; right:10px; }
+
+/* Top area: display then LEDs */
+.top{
+  display:grid;
+  gap:12px;
+}
+
+.displayShell{
+  border-radius:14px;
+  padding:12px;
+  background:linear-gradient(180deg,#0b1328,#050913);
+  border:1px solid #1f2b52;
+  box-shadow:
+    inset 0 0 18px rgba(0,0,0,.7),
+    0 0 20px rgba(103,216,255,.12);
+}
+
+.labelRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:8px;
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.tag{
+  padding:3px 8px;
+  border-radius:999px;
+  background:rgba(103,216,255,.15);
+  border:1px solid rgba(103,216,255,.35);
+  color:#bfefff;
+}
+
+.display{
+  width:100%;
+  text-align:center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:clamp(46px,12vw,72px);
+  letter-spacing:.16em;
+  padding:12px 10px;
+  border-radius:10px;
+  color:#9fffd7;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,.0) 0px,
+      rgba(0,0,0,.0) 2px,
+      rgba(0,0,0,.18) 3px
+    ),
+    linear-gradient(180deg,#02070f,#000305);
+  border:1px solid rgba(44,255,156,.35);
+  box-shadow:
+    0 0 18px rgba(44,255,156,.35),
+    inset 0 0 18px rgba(0,0,0,.9);
+}
+
+/* LEDs centered: GREEN [green] [red] RED */
+.ledBar{
+  display:flex;
+  align-items:center;
+  justify-content:center;   /* center whole block */
+  gap:14px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:linear-gradient(180deg,#0b1226,#040813);
+  border:1px solid #1f2b52;
+}
+
+.ledUnit{
+  display:flex;
+  align-items:center;
+  gap:6px;                  /* label ↔ led spacing */
+}
+
+.ledName{
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.led{
+  width:14px; height:14px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.2);
+  background:#02040a;
+  box-shadow: inset 0 0 6px rgba(0,0,0,.9);
+}
+.led.green.on{
+  background:var(--green);
+  box-shadow:0 0 10px var(--green),0 0 22px var(--green);
+}
+.led.red.on{
+  background:var(--red);
+  box-shadow:0 0 10px var(--red),0 0 22px var(--red);
+}
+
+/* Controls: buttons left, actions right */
+.controls{
+  margin-top:12px;
+  display:grid;
+  gap:12px;
+}
+
+button{
+  appearance:none;
+  border:none;
+  background:none;
+  color:inherit;
+  cursor:pointer;
+}
+
+/* container for buttons 1–8 */
+.mainButtons{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  padding:12px;
+  border-radius:14px;
+  background:linear-gradient(180deg,#0a1226,#050913);
+  border:1px solid #1f2b52;
+}
+
+/* buttons 1–8 */
+.mainBtn{
+  width:100%;
+  height:100%;
+  border-radius:10px;
+  background:linear-gradient(180deg,#1a2b55,#0b1533);
+  border:1px solid #3f5fb3;
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,.8),
+    0 0 10px rgba(103,216,255,.25);
+}
+.mainBtn:active{
+  transform:translateY(1px);
+  box-shadow:
+    inset 0 0 12px rgba(0,0,0,.9),
+    0 0 6px rgba(103,216,255,.35);
+}
+
+/* Check/Reset */
+.sideButtons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:12px;
+  border-radius:14px;
+  background:linear-gradient(180deg,#0a1226,#050913);
+  border:1px solid #1f2b52;
+}
+
+.actionBtn{
+  width:100%;
+  aspect-ratio:auto;
+  border-radius:10px;
+  border:1px solid #2a3a72;
+  background:linear-gradient(180deg,#101a38,#050913);
+  display:grid;
+  place-items:center;
+  gap:4px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+.actionGlyph{ font-size:26px; }
+.actionLabel{ font-size:10px; color:var(--muted); }
+
+.actionBtn.check{ box-shadow:0 0 12px rgba(103,216,255,.25); }
+.actionBtn.reset{ box-shadow:0 0 12px rgba(255,59,92,.25); }
+.actionBtn:active{ transform:translateY(1px); }
+
+.timerBox{
+  margin-top:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:linear-gradient(180deg,#0a1226,#050913);
+  border:1px solid #1f2b52;
+}
+
+.timerLeft{ display:flex; align-items:center; gap:8px; }
+
+.timerTitle{
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.timerState{
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.timerValue{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing:.12em;
+  font-size:clamp(18px,5vw,26px);
+  padding:6px 10px;
+  border-radius:8px;
+  background:#020611;
+  border:1px solid rgba(103,216,255,.35);
+  color:#bfffdc;
+  box-shadow:0 0 12px rgba(44,255,156,.25);
+}
+
+.badges{
+  margin-top:12px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  opacity:.8;
+}
+.badge{
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid #1f2b52;
+  background:#050913;
+}
+
+/* Desktop layout: actions flush right of panel */
+@media (min-width:480px){
+  .top{
+    grid-template-columns:1fr;
+  }
+
+  .controls{
+    grid-template-columns:1fr auto;
+    align-items:start;
+  }
+
+    .mainButtons{
+    width:max-content;
+    grid-template-columns:repeat(2,120px);
+  }
+
+  .mainBtn{
+    width:120px;
+    height:80px;
+  }
+  .sideButtons{
+    width:max-content;
+    grid-template-columns:1fr;
+    justify-self:end;
+  }
+
+  .actionBtn{
+    width:100px;
+    height: 80px;
+  }
+}

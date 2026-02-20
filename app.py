@@ -393,6 +393,10 @@ def index():
         scene_hints=scene_hints,
     )
 
+@app.route("/panel")
+def panel():
+    return render_template("panel.html")
+
 @app.route("/api/state")
 def api_state():
     with lock:
