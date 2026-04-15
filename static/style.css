@@ -83,3 +83,19 @@ h2 { margin: 0 0 10px; font-size: 16px; }
 .hintItem:hover {
   background: rgba(0,0,0,0.04);
 }
+/* scene controls duidelijker als primaire actie */
+button[data-state] {
+  background: #f0f4ff;
+  border: 1px solid #c9d8ff;
+}
+
+button[data-state]:hover {
+  background: #e4edff;
+}
+
+button[data-state].active-state {
+  background: #2b6cff;
+  color: white;
+  border-color: #2b6cff;
+  box-shadow: 0 0 0 2px rgba(43,108,255,0.4);
+}
