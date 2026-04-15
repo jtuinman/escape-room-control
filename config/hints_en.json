@@ -2,7 +2,7 @@
   "scene_1": [
     { "id": "s1_h1", "label": "don't break it!", "file": "01.ogg" },
     { "id": "s1_h2", "label": "that's not the intention", "file": "02.ogg" },
-    { "id": "s1_h3", "label": "kleine houten doosje", "file": "03.ogg" }
+    { "id": "s1_h3", "label": "something in the fridge", "file": "10.ogg" }
   
   ],
   "scene_2": [

@@ -2,7 +2,7 @@
   "scene_1": [
     { "id": "s1_h1", "label": "maak het niet stuk!", "file": "01.ogg" },
     { "id": "s1_h2", "label": "dat is niet de bedoeling", "file": "02.ogg" },
-    { "id": "s1_h3", "label": "little wooden box 2", "file": "03.ogg" }
+    { "id": "s1_h3", "label": "eten in de koelkast", "file": "10.ogg" }
   
   ],
   "scene_2": [
