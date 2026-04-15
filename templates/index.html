@@ -16,9 +16,7 @@
       </div>
     </div>
 
-    <!-- LAYOUT: 2 kolommen -->
     <div class="layout">
-      <!-- LINKERKOLOM: spel + acties -->
       <div class="col">
         <section class="card">
           <div class="row">
@@ -38,6 +36,10 @@
             <button class="btn" data-state="scene_1">scene 1</button>
             <button class="btn" data-state="scene_2">scene 2</button>
             <button class="btn" data-state="end_game">end game</button>
+          </div>
+
+          <div class="buttons" style="margin-top: 8px;">
+            <button class="btn warn hidden" id="stopTimerBtn" type="button">stop timer</button>
           </div>
 
           <div id="conn" class="muted">Connecting…</div>
@@ -62,12 +64,9 @@
         </section>
       </div>
 
-      <!-- RECHTERKOLOM: realtime status -->
       <div class="col">
         <section class="card">
           <h2>Inputs</h2>
-
-          <!-- Compact: 1 regel per input, rechts alleen een dot -->
           <ul class="list compact" id="list">
             {% for label in inputs %}
             <li class="row compactRow">
@@ -96,6 +95,7 @@
   const timerRunEl = document.getElementById("timerRun");
   const shutdownBtn = document.getElementById("shutdownBtn");
   const rebootBtn = document.getElementById("rebootBtn");
+  const stopTimerBtn = document.getElementById("stopTimerBtn");
   const langNlBtn = document.getElementById("lang-nl");
   const langEnBtn = document.getElementById("lang-en");
 
@@ -118,20 +118,23 @@
     timerRunEl.textContent = timer.running ? "running" : "stopped";
   }
 
+  function updateTimerControls() {
+    stopTimerBtn.classList.toggle("hidden", !timer.running);
+  }
+
   function applyTimer(newTimer) {
     timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
     timerBaseAt = performance.now();
     if (!timerInterval) timerInterval = setInterval(renderTimer, 250);
     renderTimer();
+    updateTimerControls();
   }
 
-  // INPUT STATUS -> DOTS (groen/rood)
   function setInputDot(label, state) {
     const safe = String(label).replaceAll(" ", "_");
     const dot = document.getElementById(`dot-${safe}`);
     if (!dot) return;
 
-    // reset
     dot.classList.remove("active", "inactive", "unknown");
     dot.title = state;
 
@@ -153,12 +156,12 @@
       btn.classList.toggle("active-state", btn.dataset.state === st);
     });
 
-    if (st === "idle") { 
+    if (st === "idle") {
       shutdownBtn.classList.remove("hidden");
       rebootBtn.classList.remove("hidden");
     } else {
       shutdownBtn.classList.add("hidden");
-      rebootBtn.classList.add("hidden");  
+      rebootBtn.classList.add("hidden");
     }
   }
 
@@ -191,6 +194,22 @@
     });
   }
 
+  async function stopTimer() {
+    const r = await fetch("/api/timer/stop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (!r.ok) {
+      return;
+    }
+
+    const data = await r.json();
+    if (data.timer) {
+      applyTimer(data.timer);
+    }
+  }
+
   async function setUiLanguage(lang) {
     const r = await fetch("/api/language", {
       method: "POST",
@@ -204,9 +223,11 @@
 
   document.querySelectorAll("button[data-state]").forEach(btn => {
     btn.addEventListener("click", () => setState(btn.dataset.state));
-    langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
-    langEnBtn.addEventListener("click", () => setUiLanguage("en"));  
   });
+
+  langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
+  langEnBtn.addEventListener("click", () => setUiLanguage("en"));
+  stopTimerBtn.addEventListener("click", () => stopTimer());
 
   document.querySelectorAll("button[data-relay]").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -238,50 +259,47 @@
     if (r.ok) connEl.textContent = "Rebooting…";
   });
 
-  // HINTS: 1 per regel, full-width
-function renderHints(gameState, hints) {
-  const sceneEl = document.getElementById("hints-scene");
-  const hintsEl = document.getElementById("hints");
+  function renderHints(gameState, hints) {
+    const sceneEl = document.getElementById("hints-scene");
+    const hintsEl = document.getElementById("hints");
 
-  if (sceneEl) sceneEl.textContent = gameState || "";
-  if (!hintsEl) return;
+    if (sceneEl) sceneEl.textContent = gameState || "";
+    if (!hintsEl) return;
 
-  hintsEl.innerHTML = "";
+    hintsEl.innerHTML = "";
 
-  if (!hints || hints.length === 0) {
-    const li = document.createElement("li");
-    li.className = "row compactRow";
-    li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
-    hintsEl.appendChild(li);
-    return;
-  }
+    if (!hints || hints.length === 0) {
+      const li = document.createElement("li");
+      li.className = "row compactRow";
+      li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+      hintsEl.appendChild(li);
+      return;
+    }
 
     for (const h of hints) {
-    const li = document.createElement("li");
-    li.className = "row compactRow hintItem";
-    li.title = h.id || "";
+      const li = document.createElement("li");
+      li.className = "row compactRow hintItem";
+      li.title = h.id || "";
 
-    const label = document.createElement("span");
-    label.className = "label";
-    label.textContent = h.label || h.id;
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = h.label || h.id;
 
-    const play = document.createElement("span");
-    play.className = "hintPlay";
-    play.textContent = "▶";
+      const play = document.createElement("span");
+      play.className = "hintPlay";
+      play.textContent = "▶";
 
-    li.appendChild(label);
-    li.appendChild(play);
+      li.appendChild(label);
+      li.appendChild(play);
 
-    // hele rij klikbaar
-    li.style.cursor = "pointer";
-    li.addEventListener("click", () => {
+      li.style.cursor = "pointer";
+      li.addEventListener("click", () => {
         fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
-    });
+      });
 
-    hintsEl.appendChild(li);
+      hintsEl.appendChild(li);
     }
-}
-
+  }
 
   function connectSSE() {
     const es = new EventSource("/events");
@@ -305,18 +323,21 @@ function renderHints(gameState, hints) {
         } else if (evt.type === "game_state") {
           setGameState(evt.game_state);
         } else if (evt.type === "timer") {
-            applyTimer(evt.timer);
+          applyTimer(evt.timer);
         } else if (evt.type === "full_state") {
-            setGameState(evt.game_state);
-            setLanguage(evt.language || "nl");
-            for (const [label, state] of Object.entries(evt.inputs || {})) {
-              setInputDot(label, state);
-            }
-            renderHints(evt.game_state, evt.hints || []);
-            applyTimer(evt.timer || { running:false, elapsed:0 });
-          } else if (evt.type === "language") {
-            setLanguage(evt.language || "nl");
-            renderHints(gameStateEl.textContent, evt.hints || []);
+          setGameState(evt.game_state);
+          setLanguage(evt.language || "nl");
+          for (const [label, state] of Object.entries(evt.inputs || {})) {
+            setInputDot(label, state);
+          }
+          for (const [name, on] of Object.entries(evt.relays || {})) {
+            setRelayButton(name, on);
+          }
+          renderHints(evt.game_state, evt.hints || []);
+          applyTimer(evt.timer || { running:false, elapsed:0 });
+        } else if (evt.type === "language") {
+          setLanguage(evt.language || "nl");
+          renderHints(gameStateEl.textContent, evt.hints || []);
         } else if (evt.type === "relay") {
           setRelayButton(evt.name, evt.on);
         } else if (evt.type === "relays" && evt.pattern) {
