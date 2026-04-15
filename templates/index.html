@@ -114,7 +114,10 @@
   }
 
   function updateTimerControls() {
-    stopTimerBtn.classList.remove("hidden");
+    const hasStarted = timer.elapsed > 0;
+    const show = timer.running || hasStarted;
+
+    stopTimerBtn.classList.toggle("hidden", !show);
   }
 
   function applyTimer(newTimer) {
