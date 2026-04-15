@@ -6,7 +6,7 @@ import threading
 import time
 import subprocess
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Literal
 from pathlib import Path
 import re
 
@@ -74,6 +74,11 @@ HINTS_CONFIG_PATHS = {
     "en": CONFIG_DIR / "hints_en.json",
 }
 
+# =========================
+# Timer model
+# =========================
+TimerState = Literal["idle", "running", "stopped"]
+
 
 @dataclass
 class InputDevice:
@@ -122,13 +127,10 @@ current_inputs: Dict[str, str] = {}
 previous_inputs: Dict[str, str] = {}
 game_state: str = "idle"
 
-# Timer model:
-# - starts at scene_1
-# - runs continuously (through scene_2 and end_game)
-# - stops only when in end_game and toggle_2 edges INACTIVE->ACTIVE
-timer_running: bool = False
-timer_started_at: Optional[float] = None
-timer_elapsed_base: float = 0.0
+# Timer internals
+timer_state: TimerState = "idle"
+timer_started_at: Optional[float] = None  # time.monotonic() when running
+timer_elapsed_base: float = 0.0           # accumulated elapsed seconds when not running
 
 
 def load_hints_config(lang: str) -> dict:
@@ -205,25 +207,81 @@ def now_mono() -> float:
     return time.monotonic()
 
 
-def get_timer_elapsed() -> float:
-    global timer_elapsed_base, timer_started_at, timer_running
-    if not timer_running or timer_started_at is None:
+def timer_get_elapsed_unlocked() -> float:
+    if timer_state != "running" or timer_started_at is None:
         return float(timer_elapsed_base)
     return float(timer_elapsed_base + (now_mono() - timer_started_at))
 
 
+def timer_snapshot() -> dict:
+    with lock:
+        elapsed = timer_get_elapsed_unlocked()
+        running = (timer_state == "running")
+        state = timer_state
+
+    return {
+        "state": state,
+        "running": running,
+        "elapsed": elapsed,
+    }
+
+
+def publish_timer(reason: str) -> None:
+    broadcaster.publish({
+        "type": "timer",
+        "timer": timer_snapshot(),
+        "reason": reason,
+        "ts": time.time(),
+    })
+
+
+def timer_reset() -> None:
+    global timer_state, timer_started_at, timer_elapsed_base
+    with lock:
+        timer_state = "idle"
+        timer_started_at = None
+        timer_elapsed_base = 0.0
+
+
+def timer_start_if_fresh() -> bool:
+    global timer_state, timer_started_at, timer_elapsed_base
+    with lock:
+        if timer_state != "idle":
+            return False
+        if timer_elapsed_base != 0.0 or timer_started_at is not None:
+            return False
+
+        timer_started_at = now_mono()
+        timer_state = "running"
+        return True
+
+
+def timer_stop() -> bool:
+    global timer_state, timer_started_at, timer_elapsed_base
+    with lock:
+        if timer_state != "running" or timer_started_at is None:
+            return False
+
+        timer_elapsed_base = timer_get_elapsed_unlocked()
+        timer_started_at = None
+        timer_state = "stopped"
+        return True
+
+
 def publish_full_state(reason: str) -> None:
+    with lock:
+        gs = game_state
+        inputs = dict(current_inputs)
+        lang = current_language
+
     evt = {
         "type": "full_state",
         "reason": reason,
-        "game_state": game_state,
-        "inputs": dict(current_inputs),
-        "language": current_language,
-        "hints": get_current_hints().get(game_state, []),
-        "timer": {
-            "running": timer_running,
-            "elapsed": get_timer_elapsed(),
-        },
+        "game_state": gs,
+        "inputs": inputs,
+        "language": lang,
+        "hints": get_current_hints().get(gs, []),
+        "timer": timer_snapshot(),
         "ts": time.time(),
     }
     broadcaster.publish(evt)
@@ -273,7 +331,7 @@ def apply_relay_pattern(state_name: str, reason: str) -> None:
 
 
 def set_game_state(new_state: str, reason: str) -> None:
-    global game_state, timer_running, timer_started_at, timer_elapsed_base
+    global game_state
 
     if new_state not in VALID_GAME_STATES:
         return
@@ -281,23 +339,19 @@ def set_game_state(new_state: str, reason: str) -> None:
     with lock:
         game_state = new_state
 
-        if new_state == "idle":
-            panic()
-            timer_running = False
-            timer_started_at = None
-            timer_elapsed_base = 0.0
+    if new_state == "idle":
+        panic()
+        timer_reset()
 
-        elif new_state == "scene_1":
-            bg_start("state1.mp3")
-            if (not timer_running) and (timer_started_at is None) and (timer_elapsed_base == 0.0):
-                timer_started_at = now_mono()
-                timer_running = True
+    elif new_state == "scene_1":
+        bg_start("state1.mp3")
+        timer_start_if_fresh()
 
-        elif new_state == "scene_2":
-            bg_switch("state2.mp3")
+    elif new_state == "scene_2":
+        bg_switch("state2.mp3")
 
-        elif new_state == "end_game":
-            bg_switch("state3.mp3")
+    elif new_state == "end_game":
+        bg_switch("state3.mp3")
 
     apply_relay_pattern(new_state, reason=f"state:{reason}")
 
@@ -307,30 +361,14 @@ def set_game_state(new_state: str, reason: str) -> None:
         "reason": reason,
         "ts": time.time(),
     })
-    broadcaster.publish({
-        "type": "timer",
-        "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
-        "reason": reason,
-        "ts": time.time(),
-    })
+    publish_timer(reason=reason)
     publish_full_state(reason=f"state_change:{reason}")
 
 
 def stop_timer(reason: str) -> None:
-    global timer_running, timer_started_at, timer_elapsed_base
-    with lock:
-        if not timer_running:
-            return
-        timer_elapsed_base = get_timer_elapsed()
-        timer_running = False
-        timer_started_at = None
-
-    broadcaster.publish({
-        "type": "timer",
-        "timer": {"running": False, "elapsed": get_timer_elapsed()},
-        "reason": reason,
-        "ts": time.time(),
-    })
+    if not timer_stop():
+        return
+    publish_timer(reason=reason)
 
 
 def logical_active_from_button(btn: Button) -> bool:
@@ -361,8 +399,6 @@ def get_label_by_role(role: str) -> Optional[str]:
 
 
 def evaluate_rules_on_change(changed_label: str) -> None:
-    global game_state
-
     with lock:
         gs = game_state
         snapshot = dict(current_inputs)
@@ -445,6 +481,7 @@ def index():
     labels = list(INPUTS.keys())
     with lock:
         gs = game_state
+        lang = current_language
 
     scene_hints = get_current_hints().get(gs, [])
     return render_template(
@@ -453,7 +490,7 @@ def index():
         states=list(VALID_GAME_STATES),
         game_state=gs,
         scene_hints=scene_hints,
-        language=current_language,
+        language=lang,
         supported_languages=sorted(SUPPORTED_LANGUAGES),
     )
 
@@ -466,14 +503,19 @@ def panel():
 @app.route("/api/state")
 def api_state():
     with lock:
-        return jsonify({
-            "game_state": game_state,
-            "language": current_language,
-            "inputs": dict(current_inputs),
-            "relays": dict(current_relays),
-            "hints": get_current_hints().get(game_state, []),
-            "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
-        })
+        gs = game_state
+        lang = current_language
+        inputs = dict(current_inputs)
+        relays = dict(current_relays)
+
+    return jsonify({
+        "game_state": gs,
+        "language": lang,
+        "inputs": inputs,
+        "relays": relays,
+        "hints": get_current_hints().get(gs, []),
+        "timer": timer_snapshot(),
+    })
 
 
 @app.route("/api/language", methods=["POST"])
@@ -486,18 +528,24 @@ def api_language():
     if new_lang not in SUPPORTED_LANGUAGES:
         return jsonify({"ok": False, "error": "invalid_language"}), 400
 
-    current_language = save_language(new_lang)
-    mqtt_set_language(current_language)
+    with lock:
+        current_language = save_language(new_lang)
+        lang = current_language
+
+    mqtt_set_language(lang)
+
+    with lock:
+        gs = game_state
 
     broadcaster.publish({
         "type": "language",
-        "language": current_language,
-        "hints": get_current_hints().get(game_state, []),
+        "language": lang,
+        "hints": get_current_hints().get(gs, []),
         "ts": time.time(),
     })
     publish_full_state(reason="language_change")
 
-    return jsonify({"ok": True, "language": current_language})
+    return jsonify({"ok": True, "language": lang})
 
 
 @app.route("/api/set_state", methods=["POST"])
