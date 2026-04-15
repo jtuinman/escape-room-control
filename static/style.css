@@ -85,18 +85,29 @@ h2 { margin: 0 0 10px; font-size: 16px; }
 
 /* hints spacing */
 .hintsList .btn { margin: 6px 0; }
-.hintItem:hover {
-  filter: brightness(0.97);
-}
+
 /* hint play icon */
 .hintPlay {
-  opacity: 0.6;
-  font-size: 0.9em;
+  opacity: 0.8;
+  font-size: 1.1em;
+  font-weight: 700;
 }
 
-/* subtiele hover voor hele rij */
+.hintItem {
+  cursor: pointer;
+  transition: all 0.12s ease;
+  border: 1px solid transparent;
+}
+
 .hintItem:hover {
-  background: rgba(0,0,0,0.04);
+  background: #f5f7ff;
+  border-color: #dbe4ff;
+  transform: translateY(-1px);
+}
+
+.hintItem:active {
+  transform: translateY(0);
+  background: #e9efff;
 }
 /* scene controls duidelijker als primaire actie */
 button[data-state] {
