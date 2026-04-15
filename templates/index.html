@@ -42,6 +42,27 @@
           <div id="conn" class="muted">Connecting…</div>
         </section>
 
+      <section class="card">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <h2 style="margin:0;">Hints</h2>
+          <div class="muted">Scene: <span id="hints-scene"></span></div>
+        </div>
+        <ul id="hints" class="list compact"></ul>
+      </section>
+
+      <div class="col">
+<section class="card">
+  <h2>Inputs</h2>
+  <ul class="list compact" id="list">
+            {% for label in inputs %}
+            <li class="row compactRow">
+              <span class="label">{{ label }}</span>
+              <span class="dot unknown" id="dot-{{ label|replace(' ', '_') }}" title="…"></span>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+
         <section class="card">
           <h2>Relays</h2>
           <div class="buttons" id="relayButtons">
@@ -50,28 +71,6 @@
             <button class="btn" data-relay="relay_3" id="relay-btn-relay_3">niet beschikbaar</button>
             <button class="btn" data-relay="relay_4" id="relay-btn-relay_4">magneet</button>
           </div>
-        </section>
-
-        <section class="card">
-          <div class="row" style="align-items:center; justify-content:space-between;">
-            <h2 style="margin:0;">Hints</h2>
-            <div class="muted">Scene: <span id="hints-scene"></span></div>
-          </div>
-          <ul id="hints" class="list compact"></ul>
-        </section>
-      </div>
-
-      <div class="col">
-        <section class="card">
-          <h2>Inputs</h2>
-          <ul class="list compact" id="list">
-            {% for label in inputs %}
-            <li class="row compactRow">
-              <span class="label">{{ label }}</span>
-              <span class="dot unknown" id="dot-{{ label|replace(' ', '_') }}" title="…"></span>
-            </li>
-            {% endfor %}
-          </ul>
         </section>
 
         <section class="card">
