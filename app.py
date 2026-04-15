@@ -526,22 +526,35 @@ def api_set_state():
     return jsonify({"ok": True})
 
 
-@app.route("/api/timer/stop", methods=["POST"])
-def api_timer_stop():
+@app.route("/api/timer/toggle", methods=["POST"])
+def api_timer_toggle():
+    global timer_running, timer_started_at, timer_elapsed_base
+
     with lock:
-        running = timer_running
+        if timer_running:
+            # PAUSE
+            timer_elapsed_base = get_timer_elapsed()
+            timer_running = False
+            timer_started_at = None
+            action = "paused"
+        else:
+            # RESUME
+            timer_started_at = now_mono()
+            timer_running = True
+            action = "resumed"
 
-    if not running:
-        return jsonify({"ok": False, "error": "timer_not_running"}), 409
-
-    stop_timer(reason="admin_stop_button")
-    publish_full_state(reason="timer_stop_button")
+    broadcaster.publish({
+        "type": "timer",
+        "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
+        "reason": f"admin_{action}",
+        "ts": time.time(),
+    })
 
     return jsonify({
         "ok": True,
+        "action": action,
         "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
     })
-
 
 @app.route("/api/relay/toggle", methods=["POST"])
 def api_relay_toggle():

@@ -115,7 +115,7 @@
   }
 
   function updateTimerControls() {
-    stopTimerBtn.classList.toggle("hidden", !timer.running);
+    stopTimerBtn.classList.remove("hidden");
   }
 
   function applyTimer(newTimer) {
@@ -124,6 +124,7 @@
     if (!timerInterval) timerInterval = setInterval(renderTimer, 250);
     renderTimer();
     updateTimerControls();
+    stopTimerBtn.textContent = timer.running ? "pause" : "resume";
   }
 
   function setInputDot(label, state) {
@@ -190,21 +191,19 @@
     });
   }
 
-  async function stopTimer() {
-    const r = await fetch("/api/timer/stop", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
+async function toggleTimer() {
+  const r = await fetch("/api/timer/toggle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  });
 
-    if (!r.ok) {
-      return;
-    }
+  if (!r.ok) return;
 
-    const data = await r.json();
-    if (data.timer) {
-      applyTimer(data.timer);
-    }
+  const data = await r.json();
+  if (data.timer) {
+    applyTimer(data.timer);
   }
+}
 
   async function setUiLanguage(lang) {
     const r = await fetch("/api/language", {
@@ -223,7 +222,7 @@
 
   langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
   langEnBtn.addEventListener("click", () => setUiLanguage("en"));
-  stopTimerBtn.addEventListener("click", () => stopTimer());
+  stopTimerBtn.addEventListener("click", () => toggleTimer());
 
   document.querySelectorAll("button[data-relay]").forEach(btn => {
     btn.addEventListener("click", async () => {
