@@ -8,13 +8,13 @@
     { "id": "s1_h6", "label": "are there more wooden boxes", "file": "21.ogg" },
     { "id": "s1_h7", "label": "something else in the kitchen?", "file": "22.ogg" },
     { "id": "s1_h8", "label": "look up to the universe", "file": "23.ogg" },
-    { "id": "s1_h8", "label": "which constellation is Sagittarius aiming for?", "file": "24.ogg" },
-    { "id": "s1_h8", "label": "Chased into a corner", "file": "25.ogg" },
-    { "id": "s1_h8", "label": "Only one other constellation can be seen", "file": "26.ogg" },
-    { "id": "s1_h8", "label": "look at the cards again", "file": "27.ogg" },
-    { "id": "s1_h8", "label": "Capricorn could be more optimistic", "file": "28.ogg" },
-    { "id": "s1_h8", "label": "find the cure for capricorns traits", "file": "29.ogg" },
-    { "id": "s1_h8", "label": "Take a look at the drawers", "file": "30.ogg" }     
+    { "id": "s1_h9", "label": "which constellation is Sagittarius aiming for?", "file": "24.ogg" },
+    { "id": "s1_h10", "label": "Chased into a corner", "file": "25.ogg" },
+    { "id": "s1_h11", "label": "Only one other constellation can be seen", "file": "26.ogg" },
+    { "id": "s1_h12", "label": "look at the cards again", "file": "27.ogg" },
+    { "id": "s1_h13", "label": "Capricorn could be more optimistic", "file": "28.ogg" },
+    { "id": "s1_h14", "label": "find the cure for capricorns traits", "file": "29.ogg" },
+    { "id": "s1_h15", "label": "Take a look at the drawers", "file": "30.ogg" }     
   ],
   "scene_2": [
     { "id": "s2_h1", "label": "Scene 1 - Hint 2", "file": "hint2.mp3" },
