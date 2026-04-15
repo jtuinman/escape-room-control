@@ -1,7 +1,9 @@
 {
   "scene_1": [
-    { "id": "s1_h1", "label": "Scene 1 - Hint 1", "file": "hint1.mp3" },
+    { "id": "s1_h1", "label": "Is er eten in de koelkast?", "file": "1-Is_er_nog_wat_te_eten_in_de_koelkast.ogg" },
+    { "id": "s1_h2", "label": "little wooden box", "file": "little wooden box.mp3" },
     { "id": "s1_h2", "label": "little wooden box", "file": "little wooden box.mp3" }
+  
   ],
   "scene_2": [
     { "id": "s2_h1", "label": "Scene 1 - Hint 2", "file": "hint2.mp3" },
