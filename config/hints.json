@@ -2,7 +2,7 @@
   "scene_1": [
     { "id": "s1_h1", "label": "Is er eten in de koelkast?", "file": "1-Is_er_nog_wat_te_eten_in_de_koelkast.ogg" },
     { "id": "s1_h2", "label": "little wooden box", "file": "little wooden box.mp3" },
-    { "id": "s1_h2", "label": "little wooden box", "file": "little wooden box.mp3" }
+    { "id": "s1_h3", "label": "little wooden box 2", "file": "little wooden box.mp3" }
   
   ],
   "scene_2": [
