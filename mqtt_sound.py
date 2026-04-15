@@ -1,9 +1,10 @@
 import json
+import os
 import paho.mqtt.client as mqtt
 print("mqtt_sound loaded", flush=True)
 
-SOUND_PI_HOST = "192.168.68.127"   # bv: 192.168.1.42
-SOUND_PI_PORT = 1883
+SOUND_PI_HOST = os.getenv("SOUND_PI_HOST", "192.168.68.125")
+SOUND_PI_PORT = int(os.getenv("SOUND_PI_PORT", "1883"))
 
 TOPIC_BG = "escape/audio/bg"
 TOPIC_HINT = "escape/audio/hint"

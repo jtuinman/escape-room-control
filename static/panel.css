@@ -163,7 +163,7 @@ h1{
 .ledBar{
   display:flex;
   align-items:center;
-  justify-content:center;   /* center whole block */
+  justify-content:center;
   gap:14px;
   padding:10px 12px;
   border-radius:12px;
@@ -174,7 +174,7 @@ h1{
 .ledUnit{
   display:flex;
   align-items:center;
-  gap:6px;                  /* label ↔ led spacing */
+  gap:6px;
 }
 
 .ledName{
@@ -200,7 +200,7 @@ h1{
   box-shadow:0 0 10px var(--red),0 0 22px var(--red);
 }
 
-/* Controls: buttons left, actions right */
+/* Controls */
 .controls{
   margin-top:12px;
   display:grid;
@@ -215,51 +215,48 @@ button{
   cursor:pointer;
 }
 
-/* container for buttons 1–8 */
+/* 12-key numpad: 3 columns × 4 rows */
 .mainButtons{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(3, 90px); /* fixed key width */
   gap:12px;
   padding:12px;
   border-radius:14px;
   background:linear-gradient(180deg,#0a1226,#050913);
   border:1px solid #1f2b52;
-}
 
-/* buttons 1–8 */
-.mainBtn{
+  width:max-content;          /* shrink to content */
+  margin:0 auto;              /* center horizontally */
+}
+/* Digits 0–9 */
+.numBtn{
   width:100%;
-  height:64px;          /* or 56/72 depending on taste */
-  min-height:56px;
-  border-radius:10px;
+  aspect-ratio: 1 / 1;   /* fixes mobile height issues */
+  border-radius:12px;
   background:linear-gradient(180deg,#1a2b55,#0b1533);
   border:1px solid #3f5fb3;
   box-shadow:
     inset 0 0 10px rgba(0,0,0,.8),
     0 0 10px rgba(103,216,255,.25);
+
+  display:grid;
+  place-items:center;
+  font-size:clamp(18px, 7vw, 28px);
+  font-weight:700;
+  letter-spacing:.06em;
 }
-.mainBtn:active{
+.numBtn:active{
   transform:translateY(1px);
   box-shadow:
     inset 0 0 12px rgba(0,0,0,.9),
     0 0 6px rgba(103,216,255,.35);
 }
 
-/* Check/Reset */
-.sideButtons{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:12px;
-  border-radius:14px;
-  background:linear-gradient(180deg,#0a1226,#050913);
-  border:1px solid #1f2b52;
-}
-
-.actionBtn{
+/* Reset + Check keys */
+.keyBtn{
   width:100%;
-  aspect-ratio:auto;
-  border-radius:10px;
+  aspect-ratio: 1 / 1;
+  border-radius:12px;
   border:1px solid #2a3a72;
   background:linear-gradient(180deg,#101a38,#050913);
   display:grid;
@@ -268,13 +265,14 @@ button{
   text-transform:uppercase;
   letter-spacing:.12em;
 }
-.actionGlyph{ font-size:26px; }
-.actionLabel{ font-size:10px; color:var(--muted); }
+.keyBtn .actionGlyph{ font-size:22px; }
+.keyBtn .actionLabel{ font-size:10px; color:var(--muted); }
+.keyBtn:active{ transform:translateY(1px); }
 
-.actionBtn.check{ box-shadow:0 0 12px rgba(103,216,255,.25); }
-.actionBtn.reset{ box-shadow:0 0 12px rgba(255,59,92,.25); }
-.actionBtn:active{ transform:translateY(1px); }
+.keyBtn.check{ box-shadow:0 0 12px rgba(103,216,255,.25); }
+.keyBtn.reset{ box-shadow:0 0 12px rgba(255,59,92,.25); }
 
+/* Timer row */
 .timerBox{
   margin-top:12px;
   display:flex;
@@ -333,34 +331,10 @@ button{
   background:#050913;
 }
 
-/* Desktop layout: actions flush right of panel */
+/* Desktop: fixed key sizes */
 @media (min-width:480px){
-  .top{
-    grid-template-columns:1fr;
-  }
-
-  .controls{
-    grid-template-columns:1fr auto;
-    align-items:start;
-  }
-
-    .mainButtons{
+  .mainButtons{
     width:max-content;
-    grid-template-columns:repeat(2,120px);
-  }
-
-  .mainBtn{
-    width:120px;
-    height:80px;
-  }
-  .sideButtons{
-    width:max-content;
-    grid-template-columns:1fr;
-    justify-self:end;
-  }
-
-  .actionBtn{
-    width:100px;
-    height: 80px;
+    grid-template-columns:repeat(3, 110px);
   }
 }
