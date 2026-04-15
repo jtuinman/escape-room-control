@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 import json
-import os 
+import os
 import queue
 import threading
 import time
 import subprocess
 from dataclasses import dataclass
 from typing import Dict, List, Optional
-from mqtt_sound import bg_start, bg_switch, bg_stop, hint_play, panic, set_language as mqtt_set_language
-
+from pathlib import Path
 import re
+
 from flask import Flask, Response, jsonify, render_template, request, abort
 from gpiozero import Button, OutputDevice
-from pathlib import Path
+
+from mqtt_sound import bg_start, bg_switch, bg_stop, hint_play, panic, set_language as mqtt_set_language
 
 # =========================
-# Escape room config 
+# Escape room config
 # =========================
 HOST = "0.0.0.0"
 PORT = 8000
@@ -26,13 +27,13 @@ INPUTS = {
     "pushbutton 2": {"pin": 27, "bounce_time": 0.05, "role": "pb2"},
     "toggle 1": {"pin": 22, "bounce_time": 0.05, "role": "t1"},
     "toggle 2": {"pin": 5, "bounce_time": 0.05, "role": "t2"},
-    "reed switch": {"pin": 6, "bounce_time": 0.05, "role": "rs1"}
-
+    "reed switch": {"pin": 6, "bounce_time": 0.05, "role": "rs1"},
 }
+
 # =========================
 # Relay outputs
 # =========================
-RELAY_ACTIVE_HIGH = False  # True: HIGH=ON, False: LOW=ON (veel relay boards zijn active-low)
+RELAY_ACTIVE_HIGH = False  # True: HIGH=ON, False: LOW=ON
 
 RELAYS = {
     "relay_1": {"pin": 16},
@@ -40,26 +41,38 @@ RELAYS = {
     "relay_3": {"pin": 21},
     "relay_4": {"pin": 26},
 }
+
 # Relay patterns per game state (True=ON, False=OFF)
 RELAY_PATTERNS = {
-    "idle":     {"relay_1": False, "relay_2": False, "relay_3": False, "relay_4": False},
-    "scene_1":  {"relay_1": True,  "relay_2": False, "relay_3": False,  "relay_4": True},
-    "scene_2":  {"relay_1": False,  "relay_2": True,  "relay_3": False, "relay_4": False},
-    "end_game": {"relay_1": True, "relay_2": True, "relay_3": False,  "relay_4": False},
+    "idle": {"relay_1": False, "relay_2": False, "relay_3": False, "relay_4": False},
+    "scene_1": {"relay_1": True, "relay_2": False, "relay_3": False, "relay_4": True},
+    "scene_2": {"relay_1": False, "relay_2": True, "relay_3": False, "relay_4": False},
+    "end_game": {"relay_1": True, "relay_2": True, "relay_3": False, "relay_4": False},
 }
 
-# Semantics you requested:
 # ACTIVE = open circuit (NOT connected to GND)
 # INACTIVE = circuit to GND
 # Hardware is active-low with pull-up, so gpiozero Button.is_pressed is True when connected to GND.
 # Therefore: logical_active = NOT is_pressed
 ACTIVE_WHEN_OPEN = True
 
-
 # =========================
 # State machine
 # =========================
 VALID_GAME_STATES = ("idle", "scene_1", "scene_2", "end_game")
+
+# =========================
+# Hint config / language
+# =========================
+CONFIG_DIR = Path("config")
+LANGUAGE_FILE = CONFIG_DIR / "language.txt"
+SUPPORTED_LANGUAGES = {"nl", "en"}
+DEFAULT_LANGUAGE = "nl"
+
+HINTS_CONFIG_PATHS = {
+    "nl": CONFIG_DIR / "hints_nl.json",
+    "en": CONFIG_DIR / "hints_en.json",
+}
 
 
 @dataclass
@@ -102,11 +115,11 @@ broadcaster = Broadcaster()
 
 devices: Dict[str, InputDevice] = {}
 relay_devices: Dict[str, OutputDevice] = {}
-current_relays: Dict[str, bool] = {}  # relay_name -> True(on)/False(off)
+current_relays: Dict[str, bool] = {}
 
 lock = threading.Lock()
-current_inputs: Dict[str, str] = {}       # label -> "ACTIVE"/"INACTIVE"
-previous_inputs: Dict[str, str] = {}      # label -> "ACTIVE"/"INACTIVE"
+current_inputs: Dict[str, str] = {}
+previous_inputs: Dict[str, str] = {}
 game_state: str = "idle"
 
 # Timer model:
@@ -114,8 +127,78 @@ game_state: str = "idle"
 # - runs continuously (through scene_2 and end_game)
 # - stops only when in end_game and toggle_2 edges INACTIVE->ACTIVE
 timer_running: bool = False
-timer_started_at: Optional[float] = None  # time.monotonic()
-timer_elapsed_base: float = 0.0           # seconds accumulated when stopped
+timer_started_at: Optional[float] = None
+timer_elapsed_base: float = 0.0
+
+
+def load_hints_config(lang: str) -> dict:
+    lang = (lang or DEFAULT_LANGUAGE).lower()
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = DEFAULT_LANGUAGE
+
+    path = HINTS_CONFIG_PATHS[lang]
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_hint_index(hints_cfg: dict) -> dict:
+    index = {}
+    for scene_hints in hints_cfg.values():
+        for hint in scene_hints:
+            hint_id = hint.get("id")
+            if hint_id:
+                index[hint_id] = hint
+    return index
+
+
+def load_all_hints():
+    hints_by_lang = {}
+    hint_index_by_lang = {}
+
+    for lang in SUPPORTED_LANGUAGES:
+        cfg = load_hints_config(lang)
+        hints_by_lang[lang] = cfg
+        hint_index_by_lang[lang] = build_hint_index(cfg)
+
+    return hints_by_lang, hint_index_by_lang
+
+
+def load_language() -> str:
+    try:
+        lang = LANGUAGE_FILE.read_text(encoding="utf-8").strip().lower()
+    except FileNotFoundError:
+        lang = DEFAULT_LANGUAGE
+
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = DEFAULT_LANGUAGE
+    return lang
+
+
+def save_language(lang: str) -> str:
+    lang = (lang or DEFAULT_LANGUAGE).strip().lower()
+    if lang not in SUPPORTED_LANGUAGES:
+        raise ValueError("invalid_language")
+    LANGUAGE_FILE.write_text(lang + "\n", encoding="utf-8")
+    return lang
+
+
+HINTS_BY_LANG, HINT_INDEX_BY_LANG = load_all_hints()
+current_language: str = load_language()
+
+
+def get_hints_for_language(lang: str) -> dict:
+    lang = (lang or DEFAULT_LANGUAGE).lower()
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = DEFAULT_LANGUAGE
+    return HINTS_BY_LANG[lang]
+
+
+def get_current_hints() -> dict:
+    return get_hints_for_language(current_language)
+
+
+def find_hint_by_id(hint_id: str):
+    return HINT_INDEX_BY_LANG[current_language].get(hint_id)
 
 
 def now_mono() -> float:
@@ -145,8 +228,8 @@ def publish_full_state(reason: str) -> None:
     }
     broadcaster.publish(evt)
 
+
 def init_relays() -> None:
-    # OutputDevice(active_high=...) bepaalt of "on()" HIGH of LOW schrijft.
     for name, cfg in RELAYS.items():
         pin = int(cfg["pin"])
         dev = OutputDevice(pin, active_high=RELAY_ACTIVE_HIGH, initial_value=False)
@@ -163,6 +246,8 @@ def relays_off(reason: str) -> None:
         "reason": reason,
         "ts": time.time(),
     })
+
+
 def apply_relay_pattern(state_name: str, reason: str) -> None:
     pattern = RELAY_PATTERNS.get(state_name)
     if not pattern:
@@ -196,31 +281,23 @@ def set_game_state(new_state: str, reason: str) -> None:
     with lock:
         game_state = new_state
 
-        # TIMER RULES:
-        # - Timer can only be STOPPED/RESET by going to idle (admin) OR by toggle_2 edge in end_game.
-        # - Timer should keep running through all other state changes.
-        # - Starting scene_1 starts the timer ONLY if it is not running AND has not started before.
-
         if new_state == "idle":
-            panic()  # stop all sounds immediately when going idle
+            panic()
             timer_running = False
             timer_started_at = None
             timer_elapsed_base = 0.0
-        
+
         elif new_state == "scene_1":
-            # Start timer ONLY if it has never started and is not running.
-            # If it's already running, do nothing (no reset).
-            # If it was stopped by toggle_2 (end_game) and you DON'T want it to restart unless idle happened,
-            # then also do nothing here when elapsed_base > 0.
-            bg_start("state1.mp3") # Start state1 music when entering scene_1
+            bg_start("state1.mp3")
             if (not timer_running) and (timer_started_at is None) and (timer_elapsed_base == 0.0):
                 timer_started_at = now_mono()
                 timer_running = True
+
         elif new_state == "scene_2":
-            bg_switch("state2.mp3") # Switch to state2 music when entering scene_2
+            bg_switch("state2.mp3")
+
         elif new_state == "end_game":
-            bg_switch("state3.mp3") # Switch to state3 music when entering end_game
-        # scene_2 and end_game: timer continues unchanged (no stop/reset here)
+            bg_switch("state3.mp3")
 
     apply_relay_pattern(new_state, reason=f"state:{reason}")
 
@@ -257,8 +334,6 @@ def stop_timer(reason: str) -> None:
 
 
 def logical_active_from_button(btn: Button) -> bool:
-    # gpiozero: is_pressed True when active_low circuit is closed (to GND)
-    # You want ACTIVE when open => logical_active = not is_pressed
     pressed = bool(btn.is_pressed)
     return (not pressed) if ACTIVE_WHEN_OPEN else pressed
 
@@ -286,7 +361,6 @@ def get_label_by_role(role: str) -> Optional[str]:
 
 
 def evaluate_rules_on_change(changed_label: str) -> None:
-    """Called after any input change. Enforces your game rules."""
     global game_state
 
     with lock:
@@ -299,7 +373,6 @@ def evaluate_rules_on_change(changed_label: str) -> None:
     t1 = get_label_by_role("t1")
     t2 = get_label_by_role("t2")
 
-    # Helper
     def is_active(label: Optional[str]) -> bool:
         if not label:
             return False
@@ -310,23 +383,19 @@ def evaluate_rules_on_change(changed_label: str) -> None:
             return False
         return prev_snapshot.get(label) == "INACTIVE"
 
-    # idle: physical inputs do nothing
     if gs == "idle":
         return
 
-    # scene_1: if pb1 and pb2 are both ACTIVE at any moment => scene_2
     if gs == "scene_1":
         if is_active(pb1) and is_active(pb2):
             set_game_state("scene_2", reason="pb1+pb2_overlap")
         return
 
-    # scene_2: toggle_1 edge INACTIVE->ACTIVE => end_game
     if gs == "scene_2":
         if changed_label == t1 and was_inactive(t1) and is_active(t1):
             set_game_state("end_game", reason="toggle_1_edge")
         return
 
-    # end_game: toggle_2 edge INACTIVE->ACTIVE => stop timer
     if gs == "end_game":
         if changed_label == t2 and was_inactive(t2) and is_active(t2):
             stop_timer(reason="toggle_2_edge_stop_timer")
@@ -334,7 +403,6 @@ def evaluate_rules_on_change(changed_label: str) -> None:
 
 
 def init_gpio() -> None:
-    # Initialize gpiozero devices and register callbacks
     for label, cfg in INPUTS.items():
         pin = int(cfg["pin"])
         bounce_time = float(cfg.get("bounce_time", 0.05))
@@ -342,9 +410,14 @@ def init_gpio() -> None:
 
         btn = Button(pin, pull_up=True, active_state=None, bounce_time=bounce_time)
 
-        devices[label] = InputDevice(label=label, pin=pin, bounce_time=bounce_time, role=role, button=btn)
+        devices[label] = InputDevice(
+            label=label,
+            pin=pin,
+            bounce_time=bounce_time,
+            role=role,
+            button=btn,
+        )
 
-        # initial state
         set_input_state(label, logical_active_from_button(btn))
 
         def on_change(lab=label):
@@ -352,81 +425,27 @@ def init_gpio() -> None:
             set_input_state(lab, logical_active_from_button(dev))
             evaluate_rules_on_change(lab)
 
-        # We trigger on both edges, then compute logical state
         btn.when_pressed = on_change
         btn.when_released = on_change
 
-    # Push an initial full snapshot
     publish_full_state(reason="boot")
 
+
 _BG_FILE_RE = re.compile(r"^state\d+\.mp3$", re.IGNORECASE)
+
 
 def _validate_bg_file(filename: str) -> str:
     if not _BG_FILE_RE.match(filename):
         abort(400, "Invalid background file")
     return filename
 
-CONFIG_DIR = Path("config")
-LANGUAGE_FILE = CONFIG_DIR / "language.txt"
-SUPPORTED_LANGUAGES = {"nl", "en"}
-DEFAULT_LANGUAGE = "nl"
-
-HINTS_CONFIG_PATHS = {
-    "nl": CONFIG_DIR / "hints_nl.json",
-    "en": CONFIG_DIR / "hints_en.json",
-}
-
-def load_hints_config(lang: str):
-    lang = (lang or DEFAULT_LANGUAGE).lower()
-    if lang not in SUPPORTED_LANGUAGES:
-        lang = DEFAULT_LANGUAGE
-
-    path = HINTS_CONFIG_PATHS[lang]
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def load_language() -> str:
-    try:
-        lang = LANGUAGE_FILE.read_text(encoding="utf-8").strip().lower()
-    except FileNotFoundError:
-        lang = DEFAULT_LANGUAGE
-
-    if lang not in SUPPORTED_LANGUAGES:
-        lang = DEFAULT_LANGUAGE
-    return lang
-
-def save_language(lang: str) -> str:
-    lang = (lang or DEFAULT_LANGUAGE).strip().lower()
-    if lang not in SUPPORTED_LANGUAGES:
-        raise ValueError("invalid_language")
-    LANGUAGE_FILE.write_text(lang + "\n", encoding="utf-8")
-    return lang
-
-current_language: str = load_language()
-HINTS_BY_LANG = {lang: load_hints_config(lang) for lang in SUPPORTED_LANGUAGES}
-
-def get_hints_for_language(lang: str):
-    lang = (lang or DEFAULT_LANGUAGE).lower()
-    if lang not in SUPPORTED_LANGUAGES:
-        lang = DEFAULT_LANGUAGE
-    return HINTS_BY_LANG[lang]
-
-def get_current_hints():
-    return get_hints_for_language(current_language)
-
-def find_hint_by_id(hint_id: str):
-    hints_cfg = get_current_hints()
-    for scene, hints in hints_cfg.items():
-        for h in hints:
-            if h.get("id") == hint_id:
-                return h
-    return None
 
 @app.route("/")
 def index():
     labels = list(INPUTS.keys())
     with lock:
         gs = game_state
+
     scene_hints = get_current_hints().get(gs, [])
     return render_template(
         "index.html",
@@ -438,9 +457,11 @@ def index():
         supported_languages=sorted(SUPPORTED_LANGUAGES),
     )
 
+
 @app.route("/panel")
 def panel():
     return render_template("panel.html")
+
 
 @app.route("/api/state")
 def api_state():
@@ -454,9 +475,10 @@ def api_state():
             "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
         })
 
+
 @app.route("/api/language", methods=["POST"])
 def api_language():
-    global current_language, HINTS_BY_LANG
+    global current_language
 
     data = request.get_json(silent=True) or {}
     new_lang = str(data.get("language", "")).strip().lower()
@@ -464,7 +486,6 @@ def api_language():
     if new_lang not in SUPPORTED_LANGUAGES:
         return jsonify({"ok": False, "error": "invalid_language"}), 400
 
-    HINTS_BY_LANG = {lang: load_hints_config(lang) for lang in SUPPORTED_LANGUAGES}
     current_language = save_language(new_lang)
     mqtt_set_language(current_language)
 
@@ -478,6 +499,7 @@ def api_language():
 
     return jsonify({"ok": True, "language": current_language})
 
+
 @app.route("/api/set_state", methods=["POST"])
 def api_set_state():
     data = request.get_json(silent=True) or {}
@@ -487,6 +509,7 @@ def api_set_state():
 
     set_game_state(new_state, reason="admin_override")
     return jsonify({"ok": True})
+
 
 @app.route("/api/relay/toggle", methods=["POST"])
 def api_relay_toggle():
@@ -516,11 +539,12 @@ def api_relay_toggle():
 
     return jsonify({"ok": True, "name": name, "on": new})
 
+
 @app.route("/api/poweroff", methods=["POST"])
 def api_poweroff():
-    # Only allow shutdown when game is idle
     with lock:
         is_idle = (game_state == "idle")
+
     if not is_idle:
         return jsonify({"ok": False, "error": "not_idle"}), 403
 
@@ -532,17 +556,19 @@ def api_poweroff():
     })
 
     try:
-        # Use sudo so we don't need to run the whole app as root
         subprocess.Popen(["sudo", "/usr/sbin/poweroff"])
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
     return jsonify({"ok": True})
 
+
 @app.route("/api/reboot", methods=["POST"])
 def api_reboot():
-    # Alleen reboot wanneer game idle is
-    if game_state != "idle":
+    with lock:
+        is_idle = (game_state == "idle")
+
+    if not is_idle:
         return jsonify({"ok": False, "error": "not_idle"}), 403
 
     broadcaster.publish({
@@ -558,6 +584,7 @@ def api_reboot():
         return jsonify({"ok": False, "error": str(e)}), 500
 
     return jsonify({"ok": True})
+
 
 @app.route("/events")
 def events():
@@ -579,6 +606,7 @@ def events():
         "X-Accel-Buffering": "no",
     })
 
+
 @app.route("/sound/bg/<action>", defaults={"filename": None})
 @app.route("/sound/bg/<action>/<filename>")
 def sound_bg(action, filename):
@@ -590,17 +618,20 @@ def sound_bg(action, filename):
         filename = _validate_bg_file(filename)
         bg_start(filename)
         return "OK"
+
     if action == "switch":
         if not filename:
             abort(400, "Missing background file")
         filename = _validate_bg_file(filename)
         bg_switch(filename)
         return "OK"
+
     if action == "stop":
         bg_stop()
         return "OK"
 
     abort(400, "Invalid action")
+
 
 @app.route("/sound/hint/<hint_id>")
 def sound_hint_by_id(hint_id):
@@ -610,15 +641,18 @@ def sound_hint_by_id(hint_id):
     hint_play(h["file"])
     return "OK"
 
+
 @app.route("/sound/panic")
 def sound_panic():
     panic()
     return "OK"
 
+
 @app.route("/api/push_full_state")
 def api_push_full_state():
     publish_full_state(reason="client_refresh")
     return "OK"
+
 
 def main() -> None:
     init_relays()
