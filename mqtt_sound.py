@@ -10,6 +10,7 @@ SOUND_PI_PORT = int(os.getenv("SOUND_PI_PORT", "1883"))
 TOPIC_BG = "escape/audio/bg"
 TOPIC_HINT = "escape/audio/hint"
 TOPIC_PANIC = "escape/audio/panic"
+TOPIC_LANGUAGE = "escape/audio/language"
 
 _client = None
 
@@ -56,3 +57,7 @@ def hint_play(filename: str):
 
 def panic():
     _safe_publish(TOPIC_PANIC, "{}")
+
+def set_language(language: str):
+    payload = {"language": language}
+    _safe_publish(TOPIC_LANGUAGE, json.dumps(payload))

@@ -7,7 +7,7 @@ import time
 import subprocess
 from dataclasses import dataclass
 from typing import Dict, List, Optional
-from mqtt_sound import bg_start, bg_switch, bg_stop, hint_play, panic
+from mqtt_sound import bg_start, bg_switch, bg_stop, hint_play, panic, set_language as mqtt_set_language
 
 import re
 from flask import Flask, Response, jsonify, render_template, request, abort
@@ -466,6 +466,7 @@ def api_language():
 
     HINTS_BY_LANG = {lang: load_hints_config(lang) for lang in SUPPORTED_LANGUAGES}
     current_language = save_language(new_lang)
+    mqtt_set_language(current_language)
 
     broadcaster.publish({
         "type": "language",
@@ -623,6 +624,7 @@ def main() -> None:
     init_relays()
     init_gpio()
     set_game_state("idle", reason="boot_to_idle")
+    mqtt_set_language(current_language)
     app.run(host=HOST, port=PORT, debug=False, threaded=True)
 
 
