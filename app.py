@@ -43,7 +43,7 @@ RELAYS = {
 RELAY_PATTERNS = {
     "idle":     {"relay_1": False, "relay_2": False, "relay_3": False, "relay_4": False},
     "scene_1":  {"relay_1": True,  "relay_2": False, "relay_3": False,  "relay_4": True},
-    "scene_2":  {"relay_1": True,  "relay_2": True,  "relay_3": False, "relay_4": True},
+    "scene_2":  {"relay_1": False,  "relay_2": True,  "relay_3": False, "relay_4": False},
     "end_game": {"relay_1": False, "relay_2": False, "relay_3": True,  "relay_4": True},
 }
 
