@@ -1,0 +1,17 @@
+{
+  "scene_1": [
+    { "id": "s1_h1", "label": "Is there food in the fridge?", "file": "1-Is_er_nog_wat_te_eten_in_de_koelkast.ogg" },
+    { "id": "s1_h2", "label": "don't break it!", "file": "01.ogg" },
+    { "id": "s1_h3", "label": "that's not the intention", "file": "02.ogg" },
+    { "id": "s1_h8", "label": "little wooden box 2", "file": "little wooden box.mp3" }
+  
+  ],
+  "scene_2": [
+    { "id": "s2_h1", "label": "Scene 1 - Hint 2", "file": "hint2.mp3" },
+    { "id": "s2_h2", "label": "Scene 2 - Hint 3", "file": "hint3.mp3" }
+  ],
+  "end_game": [
+    { "id": "eg_h1", "label": "End game - Hint 1", "file": "hint1.mp3" }
+  ],
+  "idle": []
+}

@@ -10,6 +10,10 @@
   <main>
     <div class="header-row">
       <h1>Escape Room Control</h1>
+      <div class="buttons">
+        <button class="btn" id="lang-nl" type="button">NL</button>
+        <button class="btn" id="lang-en" type="button">EN</button>
+      </div>
     </div>
 
     <!-- LAYOUT: 2 kolommen -->
@@ -92,6 +96,8 @@
   const timerRunEl = document.getElementById("timerRun");
   const shutdownBtn = document.getElementById("shutdownBtn");
   const rebootBtn = document.getElementById("rebootBtn");
+  const langNlBtn = document.getElementById("lang-nl");
+  const langEnBtn = document.getElementById("lang-en");
 
   let timer = { running: false, elapsed: 0 };
   let timerBaseAt = performance.now();
@@ -156,13 +162,18 @@
     }
   }
 
+  function setLanguage(lang) {
+    langNlBtn.classList.toggle("active-state", lang === "nl");
+    langEnBtn.classList.toggle("active-state", lang === "en");
+  }
+
   async function loadInitial() {
     const r = await fetch("/api/state", { cache: "no-store" });
     const data = await r.json();
     setGameState(data.game_state);
+    setLanguage(data.language || "nl");
 
     renderHints(data.game_state, data.hints || []);
-
     for (const [label, state] of Object.entries(data.inputs || {})) {
       setInputDot(label, state);
     }
@@ -180,8 +191,21 @@
     });
   }
 
+  async function setUiLanguage(lang) {
+    const r = await fetch("/api/language", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: lang })
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    setLanguage(data.language || lang);
+  }
+
   document.querySelectorAll("button[data-state]").forEach(btn => {
     btn.addEventListener("click", () => setState(btn.dataset.state));
+    langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
+    langEnBtn.addEventListener("click", () => setUiLanguage("en"));  
   });
 
   document.querySelectorAll("button[data-relay]").forEach(btn => {
@@ -281,14 +305,18 @@ function renderHints(gameState, hints) {
         } else if (evt.type === "game_state") {
           setGameState(evt.game_state);
         } else if (evt.type === "timer") {
-          applyTimer(evt.timer);
+            applyTimer(evt.timer);
         } else if (evt.type === "full_state") {
-          setGameState(evt.game_state);
-          for (const [label, state] of Object.entries(evt.inputs || {})) {
-            setInputDot(label, state);
-          }
-          renderHints(evt.game_state, evt.hints || []);
-          applyTimer(evt.timer || { running:false, elapsed:0 });
+            setGameState(evt.game_state);
+            setLanguage(evt.language || "nl");
+            for (const [label, state] of Object.entries(evt.inputs || {})) {
+              setInputDot(label, state);
+            }
+            renderHints(evt.game_state, evt.hints || []);
+            applyTimer(evt.timer || { running:false, elapsed:0 });
+          } else if (evt.type === "language") {
+            setLanguage(evt.language || "nl");
+            renderHints(gameStateEl.textContent, evt.hints || []);
         } else if (evt.type === "relay") {
           setRelayButton(evt.name, evt.on);
         } else if (evt.type === "relays" && evt.pattern) {

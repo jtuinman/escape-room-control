@@ -12,6 +12,7 @@ from mqtt_sound import bg_start, bg_switch, bg_stop, hint_play, panic
 import re
 from flask import Flask, Response, jsonify, render_template, request, abort
 from gpiozero import Button, OutputDevice
+from pathlib import Path
 
 # =========================
 # Escape room config 
@@ -134,7 +135,8 @@ def publish_full_state(reason: str) -> None:
         "reason": reason,
         "game_state": game_state,
         "inputs": dict(current_inputs),
-        "hints": HINTS.get(game_state, []),
+        "language": current_language,
+        "hints": get_current_hints().get(game_state, []),
         "timer": {
             "running": timer_running,
             "elapsed": get_timer_elapsed(),
@@ -364,16 +366,57 @@ def _validate_bg_file(filename: str) -> str:
         abort(400, "Invalid background file")
     return filename
 
-HINTS_CONFIG_PATH = os.path.join("config", "hints.json")
+CONFIG_DIR = Path("config")
+LANGUAGE_FILE = CONFIG_DIR / "language.txt"
+SUPPORTED_LANGUAGES = {"nl", "en"}
+DEFAULT_LANGUAGE = "nl"
 
-def load_hints_config():
-    with open(HINTS_CONFIG_PATH, "r", encoding="utf-8") as f:
+HINTS_CONFIG_PATHS = {
+    "nl": CONFIG_DIR / "hints_nl.json",
+    "en": CONFIG_DIR / "hints_en.json",
+}
+
+def load_hints_config(lang: str):
+    lang = (lang or DEFAULT_LANGUAGE).lower()
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = DEFAULT_LANGUAGE
+
+    path = HINTS_CONFIG_PATHS[lang]
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-HINTS = load_hints_config()
+def load_language() -> str:
+    try:
+        lang = LANGUAGE_FILE.read_text(encoding="utf-8").strip().lower()
+    except FileNotFoundError:
+        lang = DEFAULT_LANGUAGE
+
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = DEFAULT_LANGUAGE
+    return lang
+
+def save_language(lang: str) -> str:
+    lang = (lang or DEFAULT_LANGUAGE).strip().lower()
+    if lang not in SUPPORTED_LANGUAGES:
+        raise ValueError("invalid_language")
+    LANGUAGE_FILE.write_text(lang + "\n", encoding="utf-8")
+    return lang
+
+current_language: str = load_language()
+HINTS_BY_LANG = {lang: load_hints_config(lang) for lang in SUPPORTED_LANGUAGES}
+
+def get_hints_for_language(lang: str):
+    lang = (lang or DEFAULT_LANGUAGE).lower()
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = DEFAULT_LANGUAGE
+    return HINTS_BY_LANG[lang]
+
+def get_current_hints():
+    return get_hints_for_language(current_language)
 
 def find_hint_by_id(hint_id: str):
-    for scene, hints in HINTS.items():
+    hints_cfg = get_current_hints()
+    for scene, hints in hints_cfg.items():
         for h in hints:
             if h.get("id") == hint_id:
                 return h
@@ -384,13 +427,15 @@ def index():
     labels = list(INPUTS.keys())
     with lock:
         gs = game_state
-    scene_hints = HINTS.get(gs, [])
+    scene_hints = get_current_hints().get(gs, [])
     return render_template(
         "index.html",
         inputs=labels,
         states=list(VALID_GAME_STATES),
         game_state=gs,
         scene_hints=scene_hints,
+        language=current_language,
+        supported_languages=sorted(SUPPORTED_LANGUAGES),
     )
 
 @app.route("/panel")
@@ -402,12 +447,35 @@ def api_state():
     with lock:
         return jsonify({
             "game_state": game_state,
+            "language": current_language,
             "inputs": dict(current_inputs),
             "relays": dict(current_relays),
-            "hints": HINTS.get(game_state, []),
+            "hints": get_current_hints().get(game_state, []),
             "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
         })
 
+@app.route("/api/language", methods=["POST"])
+def api_language():
+    global current_language, HINTS_BY_LANG
+
+    data = request.get_json(silent=True) or {}
+    new_lang = str(data.get("language", "")).strip().lower()
+
+    if new_lang not in SUPPORTED_LANGUAGES:
+        return jsonify({"ok": False, "error": "invalid_language"}), 400
+
+    HINTS_BY_LANG = {lang: load_hints_config(lang) for lang in SUPPORTED_LANGUAGES}
+    current_language = save_language(new_lang)
+
+    broadcaster.publish({
+        "type": "language",
+        "language": current_language,
+        "hints": get_current_hints().get(game_state, []),
+        "ts": time.time(),
+    })
+    publish_full_state(reason="language_change")
+
+    return jsonify({"ok": True, "language": current_language})
 
 @app.route("/api/set_state", methods=["POST"])
 def api_set_state():
