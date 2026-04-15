@@ -27,7 +27,6 @@
             <div class="timerBox">
               <div class="muted">Timer</div>
               <div id="timer" class="big mono">00:00</div>
-              <div id="timerRun" class="muted">…</div>
               <button class="btn warn hidden" id="stopTimerBtn" type="button" style="margin-top:8px;">
                 stop timer
               </button>
@@ -91,7 +90,6 @@
   const connEl = document.getElementById("conn");
   const gameStateEl = document.getElementById("gameState");
   const timerEl = document.getElementById("timer");
-  const timerRunEl = document.getElementById("timerRun");
   const shutdownBtn = document.getElementById("shutdownBtn");
   const rebootBtn = document.getElementById("rebootBtn");
   const stopTimerBtn = document.getElementById("stopTimerBtn");
@@ -114,7 +112,6 @@
     const mm = Math.floor(total / 60);
     const ss = total % 60;
     timerEl.textContent = `${pad2(mm)}:${pad2(ss)}`;
-    timerRunEl.textContent = timer.running ? "running" : "stopped";
   }
 
   function updateTimerControls() {
