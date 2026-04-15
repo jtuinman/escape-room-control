@@ -2,8 +2,19 @@
   "scene_1": [
     { "id": "s1_h1", "label": "don't break it!", "file": "01.ogg" },
     { "id": "s1_h2", "label": "that's not the intention", "file": "02.ogg" },
-    { "id": "s1_h3", "label": "something in the fridge", "file": "10.ogg" }
-  
+    { "id": "s1_h3", "label": "something in the fridge", "file": "10.ogg" },
+    { "id": "s1_h4", "label": "monsters under the bed", "file": "11.ogg" },
+    { "id": "s1_h5", "label": "what's inside that little wooden box", "file": "20.ogg" },
+    { "id": "s1_h6", "label": "are there more wooden boxes", "file": "21.ogg" },
+    { "id": "s1_h7", "label": "something else in the kitchen?", "file": "22.ogg" },
+    { "id": "s1_h8", "label": "look up to the universe", "file": "23.ogg" },
+    { "id": "s1_h8", "label": "which constellation is Sagittarius aiming for?", "file": "24.ogg" },
+    { "id": "s1_h8", "label": "Chased into a corner", "file": "25.ogg" },
+    { "id": "s1_h8", "label": "Only one other constellation can be seen", "file": "26.ogg" },
+    { "id": "s1_h8", "label": "look at the cards again", "file": "27.ogg" },
+    { "id": "s1_h8", "label": "Capricorn could be more optimistic", "file": "28.ogg" },
+    { "id": "s1_h8", "label": "find the cure for capricorns traits", "file": "29.ogg" },
+    { "id": "s1_h8", "label": "Take a look at the drawers", "file": "30.ogg" }     
   ],
   "scene_2": [
     { "id": "s2_h1", "label": "Scene 1 - Hint 2", "file": "hint2.mp3" },
