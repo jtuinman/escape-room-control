@@ -56,17 +56,32 @@ h2 { margin: 0 0 10px; font-size: 16px; }
 /* compact input rows */
 .compactRow { align-items: center; justify-content: space-between; }
 
+.compactRow .label {
+  flex: 1 1 auto;
+  padding-right: 12px;
+}
 /* status dot */
 .dot {
-  width: 12px;
-  height: 12px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
   display: inline-block;
-  border: 1px solid rgba(0,0,0,0.25);
+  border: 2px solid rgba(0,0,0,0.18);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.03);
+  flex: 0 0 auto;
 }
-.dot.unknown { opacity: 0.5; }
-.dot.active { background: #2ecc71; }   /* groen */
-.dot.inactive { background: #e74c3c; } /* rood */
+
+.dot.unknown {
+  opacity: 0.45;
+}
+
+.dot.active {
+  background: #2ecc71;
+}
+
+.dot.inactive {
+  background: #e74c3c;
+}
 
 /* hints spacing */
 .hintsList .btn { margin: 6px 0; }
