@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Escape Room Control</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
+
 <body>
   <main>
     <div class="header-row">
@@ -39,18 +41,18 @@
           </div>
         </section>
 
-      <section class="card">
-        <div class="row" style="align-items:center; justify-content:space-between;">
-          <h2 style="margin:0;">Hints</h2>
-          <div class="muted">Scene: <span id="hints-scene"></span></div>
-        </div>
-        <ul id="hints" class="list compact"></ul>
-      </section>
-    </div>
+        <section class="card">
+          <div class="row" style="align-items:center; justify-content:space-between;">
+            <h2 style="margin:0;">Hints</h2>
+            <div class="muted">Scene: <span id="hints-scene"></span></div>
+          </div>
+          <ul id="hints" class="list compact"></ul>
+        </section>
+      </div>
       <div class="col">
-<section class="card">
-  <h2>Inputs</h2>
-  <ul class="list compact" id="list">
+        <section class="card">
+          <h2>Inputs</h2>
+          <ul class="list compact" id="list">
             {% for label in inputs %}
             <li class="row compactRow">
               <span class="label">{{ label }}</span>
@@ -81,413 +83,414 @@
 
   </main>
 
-<script>
-  const connDot = document.getElementById("connDot");
-  connDot.classList.add("disconnected");
-  const gameStateEl = document.getElementById("gameState");
-  const timerEl = document.getElementById("timer");
-  timerEl.style.cursor = "pointer";
-  timerEl.addEventListener("click", () => {
-    toggleTimer();
-  });
-  const shutdownBtn = document.getElementById("shutdownBtn");
-  const rebootBtn = document.getElementById("rebootBtn");
-  const langNlBtn = document.getElementById("lang-nl");
-  const langEnBtn = document.getElementById("lang-en");
+  <script>
+    const connDot = document.getElementById("connDot");
+    connDot.classList.add("disconnected");
+    const gameStateEl = document.getElementById("gameState");
+    const timerEl = document.getElementById("timer");
+    timerEl.style.cursor = "pointer";
+    timerEl.addEventListener("click", () => {
+      toggleTimer();
+    });
+    const shutdownBtn = document.getElementById("shutdownBtn");
+    const rebootBtn = document.getElementById("rebootBtn");
+    const langNlBtn = document.getElementById("lang-nl");
+    const langEnBtn = document.getElementById("lang-en");
 
-  let timer = { running: false, elapsed: 0 };
-  let timerBaseAt = performance.now();
-  let timerInterval = null;
+    let timer = { running: false, elapsed: 0 };
+    let timerBaseAt = performance.now();
+    let timerInterval = null;
 
-  let lastHintsRenderKey = null;
-  let lastRenderedTimerText = null;
-  let lastRenderedTimerState = null;
+    let lastHintsRenderKey = null;
+    let lastRenderedTimerText = null;
+    let lastRenderedTimerState = null;
 
-  function pad2(n){ return String(n).padStart(2, "0"); }
+    function pad2(n) { return String(n).padStart(2, "0"); }
 
-  function renderTimer() {
-    const now = performance.now();
-    let elapsed = timer.elapsed;
+    function renderTimer() {
+      const now = performance.now();
+      let elapsed = timer.elapsed;
 
-    if (timer.running) elapsed += (now - timerBaseAt) / 1000.0;
-    elapsed = Math.max(0, elapsed);
+      if (timer.running) elapsed += (now - timerBaseAt) / 1000.0;
+      elapsed = Math.max(0, elapsed);
 
-    const total = Math.floor(elapsed);
-    const mm = Math.floor(total / 60);
-    const ss = total % 60;
-    const timerText = `${pad2(mm)}:${pad2(ss)}`;
+      const total = Math.floor(elapsed);
+      const mm = Math.floor(total / 60);
+      const ss = total % 60;
+      const timerText = `${pad2(mm)}:${pad2(ss)}`;
 
-    if (timerText !== lastRenderedTimerText) {
-      timerEl.textContent = timerText;
-      lastRenderedTimerText = timerText;
-    }
-
-    const isOver15Min = elapsed >= 15 * 60;
-    const isPaused = !timer.running && elapsed > 0;
-    const timerState = isOver15Min ? "danger" : isPaused ? "paused" : "normal";
-
-    if (timerState !== lastRenderedTimerState) {
-      timerEl.classList.remove("paused", "danger");
-
-      if (timerState === "danger") {
-        timerEl.classList.add("danger");
-      } else if (timerState === "paused") {
-        timerEl.classList.add("paused");
+      if (timerText !== lastRenderedTimerText) {
+        timerEl.textContent = timerText;
+        lastRenderedTimerText = timerText;
       }
 
-      lastRenderedTimerState = timerState;
+      const isOver15Min = elapsed >= 15 * 60;
+      const isPaused = !timer.running && elapsed > 0;
+      const timerState = isOver15Min ? "danger" : isPaused ? "paused" : "normal";
+
+      if (timerState !== lastRenderedTimerState) {
+        timerEl.classList.remove("paused", "danger");
+
+        if (timerState === "danger") {
+          timerEl.classList.add("danger");
+        } else if (timerState === "paused") {
+          timerEl.classList.add("paused");
+        }
+
+        lastRenderedTimerState = timerState;
+      }
     }
-  }
 
-  function applyTimer(newTimer) {
-    timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
-    timerBaseAt = performance.now();
+    function applyTimer(newTimer) {
+      timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
+      timerBaseAt = performance.now();
 
-    if (!timerInterval) timerInterval = setInterval(renderTimer, 250);
+      if (!timerInterval) timerInterval = setInterval(renderTimer, 250);
 
-    renderTimer();
-  }
-
-  function setInputDot(label, state) {
-    const safe = String(label).replaceAll(" ", "_");
-    const dot = document.getElementById(`dot-${safe}`);
-    if (!dot) return;
-
-    dot.classList.remove("active", "inactive", "unknown");
-    dot.title = state;
-
-    if (state === "ACTIVE") dot.classList.add("active");
-    else if (state === "INACTIVE") dot.classList.add("inactive");
-    else dot.classList.add("unknown");
-  }
-
-  function setRelayButton(name, on) {
-    const btn = document.getElementById(`relay-btn-${name}`);
-    if (!btn) return;
-    btn.classList.toggle("active-state", !!on);
-  }
-
-  function setGameState(st) {
-    gameStateEl.textContent = st;
-
-    document.querySelectorAll("button[data-state]").forEach(btn => {
-      btn.classList.toggle("active-state", btn.dataset.state === st);
-    });
-
-    if (st === "idle") {
-      shutdownBtn.classList.remove("hidden");
-      rebootBtn.classList.remove("hidden");
-    } else {
-      shutdownBtn.classList.add("hidden");
-      rebootBtn.classList.add("hidden");
+      renderTimer();
     }
-  }
 
-  function setLanguage(lang) {
-    langNlBtn.classList.toggle("active-state", lang === "nl");
-    langEnBtn.classList.toggle("active-state", lang === "en");
-  }
+    function setInputDot(label, state) {
+      const safe = String(label).replaceAll(" ", "_");
+      const dot = document.getElementById(`dot-${safe}`);
+      if (!dot) return;
 
-  async function loadInitial() {
-    const r = await fetch("/api/state", { cache: "no-store" });
-    const data = await r.json();
-    setGameState(data.game_state);
-    setLanguage(data.language || "nl");
+      dot.classList.remove("active", "inactive", "unknown");
+      dot.title = state;
 
-    renderHints(data.game_state, data.hints || {});
-    for (const [label, state] of Object.entries(data.inputs || {})) {
-      setInputDot(label, state);
+      if (state === "ACTIVE") dot.classList.add("active");
+      else if (state === "INACTIVE") dot.classList.add("inactive");
+      else dot.classList.add("unknown");
     }
-    for (const [name, on] of Object.entries(data.relays || {})) {
-      setRelayButton(name, on);
+
+    function setRelayButton(name, on) {
+      const btn = document.getElementById(`relay-btn-${name}`);
+      if (!btn) return;
+      btn.classList.toggle("active-state", !!on);
     }
-    applyTimer(data.timer || { running:false, elapsed:0 });
-  }
 
-  async function setState(st) {
-    await fetch("/api/set_state", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ state: st })
-    });
-  }
+    function setGameState(st) {
+      gameStateEl.textContent = st;
 
-async function toggleTimer() {
-  const r = await fetch("/api/timer/toggle", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" }
-  });
+      document.querySelectorAll("button[data-state]").forEach(btn => {
+        btn.classList.toggle("active-state", btn.dataset.state === st);
+      });
 
-  if (!r.ok) return;
+      if (st === "idle") {
+        shutdownBtn.classList.remove("hidden");
+        rebootBtn.classList.remove("hidden");
+      } else {
+        shutdownBtn.classList.add("hidden");
+        rebootBtn.classList.add("hidden");
+      }
+    }
 
-  const data = await r.json();
-  if (data.timer) {
-    applyTimer(data.timer);
-  }
-}
+    function setLanguage(lang) {
+      langNlBtn.classList.toggle("active-state", lang === "nl");
+      langEnBtn.classList.toggle("active-state", lang === "en");
+    }
 
-  async function setUiLanguage(lang) {
-    const r = await fetch("/api/language", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language: lang })
-    });
-    if (!r.ok) return;
-    const data = await r.json();
-    setLanguage(data.language || lang);
-  }
+    async function loadInitial() {
+      const r = await fetch("/api/state", { cache: "no-store" });
+      const data = await r.json();
+      setGameState(data.game_state);
+      setLanguage(data.language || "nl");
 
-  document.querySelectorAll("button[data-state]").forEach(btn => {
-    btn.addEventListener("click", () => setState(btn.dataset.state));
-  });
+      renderHints(data.game_state, data.hints || {});
+      for (const [label, state] of Object.entries(data.inputs || {})) {
+        setInputDot(label, state);
+      }
+      for (const [name, on] of Object.entries(data.relays || {})) {
+        setRelayButton(name, on);
+      }
+      applyTimer(data.timer || { running: false, elapsed: 0 });
+    }
 
-  langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
-  langEnBtn.addEventListener("click", () => setUiLanguage("en"));
-
-  document.querySelectorAll("button[data-relay]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const name = btn.dataset.relay;
-      const r = await fetch("/api/relay/toggle", {
+    async function setState(st) {
+      await fetch("/api/set_state", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ state: st })
+      });
+    }
+
+    async function toggleTimer() {
+      const r = await fetch("/api/timer/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!r.ok) return;
+
+      const data = await r.json();
+      if (data.timer) {
+        applyTimer(data.timer);
+      }
+    }
+
+    async function setUiLanguage(lang) {
+      const r = await fetch("/api/language", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: lang })
       });
       if (!r.ok) return;
       const data = await r.json();
-      setRelayButton(data.name, data.on);
-    });
-  });
-
-  shutdownBtn.addEventListener("click", async () => {
-    const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt afsluiten?");
-    if (!ok) return;
-
-    const r = await fetch("/api/poweroff", { method: "POST" });
-    if (r.ok) connDot.classList.add("disconnected");
-  });
-
-  rebootBtn.addEventListener("click", async () => {
-    const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt herstarten?");
-    if (!ok) return;
-
-    const r = await fetch("/api/reboot", { method: "POST" });
-    if (r.ok) connDot.classList.add("disconnected");
-  });
-
-  function createHintItem(h) {
-    const li = document.createElement("li");
-    li.className = "row compactRow hintItem";
-    li.title = h.id || "";
-
-    const label = document.createElement("span");
-    label.className = "label";
-    label.textContent = h.label || h.id;
-
-    const play = document.createElement("span");
-    play.className = "hintPlay";
-    play.textContent = "▶";
-
-    li.appendChild(label);
-    li.appendChild(play);
-
-    li.style.cursor = "pointer";
-    li.addEventListener("click", () => {
-      fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
-    });
-
-    return li;
-  }
-
-  function createPuzzleBlock(puzzle, startOpen = false) {
-    return createCollapsibleHintBlock(
-      puzzle.label || puzzle.id || "Puzzel",
-      puzzle.hints || [],
-      "hintPuzzleTitle",
-      startOpen
-    );
-  }
-
-  function createCollapsibleHintBlock(title, hints, titleClass, startOpen = false) {
-    const fragment = document.createDocumentFragment();
-
-    const header = document.createElement("li");
-    header.className = `row compactRow ${titleClass} hintAccordionHeader`;
-    header.style.cursor = "pointer";
-
-    const titleText = document.createElement("span");
-    titleText.innerHTML = `<strong>${title}</strong>`;
-
-    const toggleIcon = document.createElement("span");
-    toggleIcon.className = "hintToggleIcon";
-
-    header.appendChild(titleText);
-    header.appendChild(toggleIcon);
-
-    const wrapper = document.createElement("li");
-    wrapper.className = "hintPuzzleHints hintAccordionBody";
-
-    const innerList = document.createElement("ul");
-    innerList.className = "list compact";
-
-    for (const h of (hints || [])) {
-      innerList.appendChild(createHintItem(h));
+      setLanguage(data.language || lang);
     }
 
-    wrapper.appendChild(innerList);
-
-    wrapper.classList.toggle("hidden", !startOpen);
-    toggleIcon.textContent = startOpen ? "▼" : "▶";
-
-    fragment.appendChild(header);
-    fragment.appendChild(wrapper);
-
-    fragment._accordion = {
-      header,
-      wrapper,
-      toggleIcon,
-      get isOpen() {
-        return !wrapper.classList.contains("hidden");
-      },
-      open() {
-        wrapper.classList.remove("hidden");
-        toggleIcon.textContent = "▼";
-      },
-      close() {
-        wrapper.classList.add("hidden");
-        toggleIcon.textContent = "▶";
-      }
-    };
-
-    return fragment;
-  }
-
-  function renderHints(gameState, hintsData) {
-    const key = JSON.stringify({
-      gameState,
-      hintsData
+    document.querySelectorAll("button[data-state]").forEach(btn => {
+      btn.addEventListener("click", () => setState(btn.dataset.state));
     });
 
-    if (key === lastHintsRenderKey) {
-      return;
-    }
+    langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
+    langEnBtn.addEventListener("click", () => setUiLanguage("en"));
 
-    lastHintsRenderKey = key;
-    const sceneEl = document.getElementById("hints-scene");
-    const hintsEl = document.getElementById("hints");
+    document.querySelectorAll("button[data-relay]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const name = btn.dataset.relay;
+        const r = await fetch("/api/relay/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name })
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        setRelayButton(data.name, data.on);
+      });
+    });
 
-    if (sceneEl) sceneEl.textContent = gameState || "";
-    if (!hintsEl) return;
+    shutdownBtn.addEventListener("click", async () => {
+      const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt afsluiten?");
+      if (!ok) return;
 
-    hintsEl.innerHTML = "";
+      const r = await fetch("/api/poweroff", { method: "POST" });
+      if (r.ok) connDot.classList.add("disconnected");
+    });
 
-    const globalHints = hintsData?.global || [];
-    const puzzles = hintsData?.puzzles || [];
+    rebootBtn.addEventListener("click", async () => {
+      const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt herstarten?");
+      if (!ok) return;
 
-    if (globalHints.length === 0 && puzzles.length === 0) {
+      const r = await fetch("/api/reboot", { method: "POST" });
+      if (r.ok) connDot.classList.add("disconnected");
+    });
+
+    function createHintItem(h) {
       const li = document.createElement("li");
-      li.className = "row compactRow";
-      li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
-      hintsEl.appendChild(li);
-      return;
+      li.className = "row compactRow hintItem";
+      li.title = h.id || "";
+
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = h.label || h.id;
+
+      const play = document.createElement("span");
+      play.className = "hintPlay";
+      play.textContent = "▶";
+
+      li.appendChild(label);
+      li.appendChild(play);
+
+      li.style.cursor = "pointer";
+      li.addEventListener("click", () => {
+        fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
+      });
+
+      return li;
     }
 
-const accordionBlocks = [];
-
-if (globalHints.length > 0) {
-  const globalBlock = createCollapsibleHintBlock(
-    "Algemeen",
-    globalHints,
-    "hintSectionTitle",
-    false
-  );
-  accordionBlocks.push(globalBlock);
-  hintsEl.appendChild(globalBlock);
-}
-
-puzzles.forEach((puzzle, index) => {
-  const block = createPuzzleBlock(puzzle, index === 0);
-  accordionBlocks.push(block);
-  hintsEl.appendChild(block);
-});
-
-function closeAllExcept(activeBlock) {
-  accordionBlocks.forEach(block => {
-    if (block !== activeBlock) {
-      block._accordion.close();
+    function createPuzzleBlock(puzzle, startOpen = false) {
+      return createCollapsibleHintBlock(
+        puzzle.label || puzzle.id || "Puzzel",
+        puzzle.hints || [],
+        "hintPuzzleTitle",
+        startOpen
+      );
     }
-  });
-}
 
-accordionBlocks.forEach(block => {
-  const acc = block._accordion;
-  acc.header.addEventListener("click", () => {
-    const willOpen = !acc.isOpen;
+    function createCollapsibleHintBlock(title, hints, titleClass, startOpen = false) {
+      const fragment = document.createDocumentFragment();
 
-    closeAllExcept(block);
+      const header = document.createElement("li");
+      header.className = `row compactRow ${titleClass} hintAccordionHeader`;
+      header.style.cursor = "pointer";
 
-    if (willOpen) {
-      acc.open();
-    } else {
-      acc.close();
-    }
-  });
-});
+      const titleText = document.createElement("span");
+      titleText.innerHTML = `<strong>${title}</strong>`;
 
-  }
-  function connectSSE() {
-    const es = new EventSource("/events");
+      const toggleIcon = document.createElement("span");
+      toggleIcon.className = "hintToggleIcon";
 
-    es.addEventListener("open", () => {
-      connDot.classList.remove("disconnected");
-      connDot.classList.add("connected");    
-    });
+      header.appendChild(titleText);
+      header.appendChild(toggleIcon);
 
-    es.addEventListener("error", () => {
-      connDot.classList.remove("connected");
-      connDot.classList.add("disconnected");
-    });
+      const wrapper = document.createElement("li");
+      wrapper.className = "hintPuzzleHints hintAccordionBody";
 
-    es.onmessage = (msg) => {
-      try {
-        const evt = JSON.parse(msg.data);
+      const innerList = document.createElement("ul");
+      innerList.className = "list compact";
 
-        if (evt.type === "input") {
-          setInputDot(evt.label, evt.state);
-        } else if (evt.type === "game_state") {
-          setGameState(evt.game_state);
-        } else if (evt.type === "timer") {
-          applyTimer(evt.timer);
-        } else if (evt.type === "full_state") {
-          setGameState(evt.game_state);
-          setLanguage(evt.language || "nl");
-          for (const [label, state] of Object.entries(evt.inputs || {})) {
-            setInputDot(label, state);
-          }
-          for (const [name, on] of Object.entries(evt.relays || {})) {
-            setRelayButton(name, on);
-          }
-          renderHints(evt.game_state, evt.hints || {});
-          applyTimer(evt.timer || { running:false, elapsed:0 });
-        } else if (evt.type === "language") {
-          setLanguage(evt.language || "nl");
-          renderHints(gameStateEl.textContent, evt.hints || {});
-        } else if (evt.type === "relay") {
-          setRelayButton(evt.name, evt.on);
-        } else if (evt.type === "relays" && evt.pattern) {
-          for (const [name, on] of Object.entries(evt.pattern)) {
-            setRelayButton(name, on);
-          }
+      for (const h of (hints || [])) {
+        innerList.appendChild(createHintItem(h));
+      }
+
+      wrapper.appendChild(innerList);
+
+      wrapper.classList.toggle("hidden", !startOpen);
+      toggleIcon.textContent = startOpen ? "▼" : "▶";
+
+      fragment.appendChild(header);
+      fragment.appendChild(wrapper);
+
+      fragment._accordion = {
+        header,
+        wrapper,
+        toggleIcon,
+        get isOpen() {
+          return !wrapper.classList.contains("hidden");
+        },
+        open() {
+          wrapper.classList.remove("hidden");
+          toggleIcon.textContent = "▼";
+        },
+        close() {
+          wrapper.classList.add("hidden");
+          toggleIcon.textContent = "▶";
         }
+      };
 
-      } catch (e) {}
-    };
+      return fragment;
+    }
 
-  }
+    function renderHints(gameState, hintsData) {
+      const key = JSON.stringify({
+        gameState,
+        hintsData
+      });
 
-  (async () => {
-    await loadInitial();
-    connectSSE();
-  })();
-</script>
+      if (key === lastHintsRenderKey) {
+        return;
+      }
+
+      lastHintsRenderKey = key;
+      const sceneEl = document.getElementById("hints-scene");
+      const hintsEl = document.getElementById("hints");
+
+      if (sceneEl) sceneEl.textContent = gameState || "";
+      if (!hintsEl) return;
+
+      hintsEl.innerHTML = "";
+
+      const globalHints = hintsData?.global || [];
+      const puzzles = hintsData?.puzzles || [];
+
+      if (globalHints.length === 0 && puzzles.length === 0) {
+        const li = document.createElement("li");
+        li.className = "row compactRow";
+        li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+        hintsEl.appendChild(li);
+        return;
+      }
+
+      const accordionBlocks = [];
+
+      if (globalHints.length > 0) {
+        const globalBlock = createCollapsibleHintBlock(
+          "Algemeen",
+          globalHints,
+          "hintSectionTitle",
+          false
+        );
+        accordionBlocks.push(globalBlock);
+        hintsEl.appendChild(globalBlock);
+      }
+
+      puzzles.forEach((puzzle, index) => {
+        const block = createPuzzleBlock(puzzle, index === 0);
+        accordionBlocks.push(block);
+        hintsEl.appendChild(block);
+      });
+
+      function closeAllExcept(activeBlock) {
+        accordionBlocks.forEach(block => {
+          if (block !== activeBlock) {
+            block._accordion.close();
+          }
+        });
+      }
+
+      accordionBlocks.forEach(block => {
+        const acc = block._accordion;
+        acc.header.addEventListener("click", () => {
+          const willOpen = !acc.isOpen;
+
+          closeAllExcept(block);
+
+          if (willOpen) {
+            acc.open();
+          } else {
+            acc.close();
+          }
+        });
+      });
+
+    }
+    function connectSSE() {
+      const es = new EventSource("/events");
+
+      es.addEventListener("open", () => {
+        connDot.classList.remove("disconnected");
+        connDot.classList.add("connected");
+      });
+
+      es.addEventListener("error", () => {
+        connDot.classList.remove("connected");
+        connDot.classList.add("disconnected");
+      });
+
+      es.onmessage = (msg) => {
+        try {
+          const evt = JSON.parse(msg.data);
+
+          if (evt.type === "input") {
+            setInputDot(evt.label, evt.state);
+          } else if (evt.type === "game_state") {
+            setGameState(evt.game_state);
+          } else if (evt.type === "timer") {
+            applyTimer(evt.timer);
+          } else if (evt.type === "full_state") {
+            setGameState(evt.game_state);
+            setLanguage(evt.language || "nl");
+            for (const [label, state] of Object.entries(evt.inputs || {})) {
+              setInputDot(label, state);
+            }
+            for (const [name, on] of Object.entries(evt.relays || {})) {
+              setRelayButton(name, on);
+            }
+            renderHints(evt.game_state, evt.hints || {});
+            applyTimer(evt.timer || { running: false, elapsed: 0 });
+          } else if (evt.type === "language") {
+            setLanguage(evt.language || "nl");
+            renderHints(gameStateEl.textContent, evt.hints || {});
+          } else if (evt.type === "relay") {
+            setRelayButton(evt.name, evt.on);
+          } else if (evt.type === "relays" && evt.pattern) {
+            for (const [name, on] of Object.entries(evt.pattern)) {
+              setRelayButton(name, on);
+            }
+          }
+
+        } catch (e) { }
+      };
+
+    }
+
+    (async () => {
+      await loadInitial();
+      connectSSE();
+    })();
+  </script>
 </body>
+
 </html>
