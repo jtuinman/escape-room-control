@@ -439,8 +439,6 @@ def init_gpio() -> None:
         btn.when_pressed = on_change
         btn.when_released = on_change
 
-    publish_full_state(reason="boot")
-
 
 _BG_FILE_RE = re.compile(r"^state\d+\.mp3$", re.IGNORECASE)
 
