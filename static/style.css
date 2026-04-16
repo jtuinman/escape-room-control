@@ -18,6 +18,7 @@ h1 { margin: 0 0 12px; font-size: 24px; }
 .btn:hover { background: #e3e3e3; }
 .big { font-size: 22px; font-weight: 800; }
 #timer { font-size: 44px; line-height: 1; }
+#timer.paused { color: orange; }
 .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 .timerBox {
   text-align: center;
