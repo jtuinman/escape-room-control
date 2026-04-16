@@ -341,40 +341,85 @@ async function toggleTimer() {
     return fragment;
   }
 
-function renderHints(gameState, hintsData) {
-  const sceneEl = document.getElementById("hints-scene");
-  const hintsEl = document.getElementById("hints");
+  function renderHints(gameState, hintsData) {
+    const sceneEl = document.getElementById("hints-scene");
+    const hintsEl = document.getElementById("hints");
 
-  if (sceneEl) sceneEl.textContent = gameState || "";
-  if (!hintsEl) return;
+    if (sceneEl) sceneEl.textContent = gameState || "";
+    if (!hintsEl) return;
 
-  hintsEl.innerHTML = "";
+    hintsEl.innerHTML = "";
 
-  const globalHints = hintsData?.global || [];
-  const puzzles = hintsData?.puzzles || [];
+    const globalHints = hintsData?.global || [];
+    const puzzles = hintsData?.puzzles || [];
 
-  if (globalHints.length === 0 && puzzles.length === 0) {
-    const li = document.createElement("li");
-    li.className = "row compactRow";
-    li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
-    hintsEl.appendChild(li);
-    return;
-  }
+    if (globalHints.length === 0 && puzzles.length === 0) {
+      const li = document.createElement("li");
+      li.className = "row compactRow";
+      li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+      hintsEl.appendChild(li);
+      return;
+    }
 
   if (globalHints.length > 0) {
+    const fragment = document.createDocumentFragment();
+
     const sectionTitle = document.createElement("li");
     sectionTitle.className = "row compactRow hintSectionTitle";
-    sectionTitle.innerHTML = `<strong>Algemeen</strong>`;
-    hintsEl.appendChild(sectionTitle);
+    sectionTitle.style.cursor = "pointer";
+
+    const titleText = document.createElement("span");
+    titleText.innerHTML = `<strong>Algemeen</strong>`;
+
+    const toggleIcon = document.createElement("span");
+    toggleIcon.className = "hintToggleIcon";
+    toggleIcon.textContent = "▶";
+
+    sectionTitle.appendChild(titleText);
+    sectionTitle.appendChild(toggleIcon);
+
+    const wrapper = document.createElement("li");
+    wrapper.className = "hintPuzzleHints hidden";
+
+    const innerList = document.createElement("ul");
+    innerList.className = "list compact";
 
     for (const h of globalHints) {
-      hintsEl.appendChild(createHintItem(h));
+      innerList.appendChild(createHintItem(h));
     }
+
+    wrapper.appendChild(innerList);
+
+    let isOpen = false;
+
+    sectionTitle.addEventListener("click", () => {
+      isOpen = !isOpen;
+      wrapper.classList.toggle("hidden", !isOpen);
+      toggleIcon.textContent = isOpen ? "▼" : "▶";
+    });
+
+    fragment.appendChild(sectionTitle);
+    fragment.appendChild(wrapper);
+
+    hintsEl.appendChild(fragment);
   }
 
-  for (const puzzle of puzzles) {
-    hintsEl.appendChild(createPuzzleBlock(puzzle));
-  }}
+  puzzles.forEach((puzzle, index) => {
+    const block = createPuzzleBlock(puzzle);
+
+    // eerste puzzel openklappen
+    if (index === 0) {
+      const wrapper = block.childNodes[1];
+      const header = block.childNodes[0];
+
+      wrapper.classList.remove("hidden");
+
+      const icon = header.querySelector(".hintToggleIcon");
+      if (icon) icon.textContent = "▼";
+    }
+
+    hintsEl.appendChild(block);
+  });
 
   function connectSSE() {
     const es = new EventSource("/events");
