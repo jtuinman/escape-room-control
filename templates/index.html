@@ -9,13 +9,15 @@
 <body>
   <main>
     <div class="header-row">
-      <h1>Escape Room Control</h1>
+      <h1 style="display:flex; align-items:center; gap:10px;">
+        Escape Room Control
+        <span id="connDot" class="connDot"></span>
+      </h1>
       <div class="buttons">
         <button class="btn" id="lang-nl" type="button">NL</button>
         <button class="btn" id="lang-en" type="button">EN</button>
       </div>
     </div>
-
     <div class="layout">
       <div class="col">
         <section class="card">
@@ -35,8 +37,6 @@
             <button class="btn" data-state="scene_2">scene 2</button>
             <button class="btn" data-state="end_game">end game</button>
           </div>
-
-          <div id="conn" class="muted">Connecting…</div>
         </section>
 
       <section class="card">
@@ -82,7 +82,8 @@
   </main>
 
 <script>
-  const connEl = document.getElementById("conn");
+  const connDot = document.getElementById("connDot");
+  connDot.classList.add("disconnected");
   const gameStateEl = document.getElementById("gameState");
   const timerEl = document.getElementById("timer");
   timerEl.style.cursor = "pointer";
@@ -413,13 +414,13 @@ accordionBlocks.forEach(block => {
     const es = new EventSource("/events");
 
     es.addEventListener("open", () => {
-      connEl.textContent = "Connected";
-      connEl.classList.remove("error");
+      connDot.classList.remove("disconnected");
+      connDot.classList.add("connected");    
     });
 
     es.addEventListener("error", () => {
-      connEl.textContent = "Disconnected (auto-retrying)";
-      connEl.classList.add("error");
+      connDot.classList.remove("connected");
+      connDot.classList.add("disconnected");
     });
 
     es.onmessage = (msg) => {

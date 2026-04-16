@@ -85,6 +85,22 @@ h2 { margin: 0 0 10px; font-size: 16px; }
   background: #e74c3c;
 }
 
+.connDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: gray;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+}
+
+.connDot.connected {
+  background: #2ecc71;
+}
+
+.connDot.disconnected {
+  background: #e74c3c;
+}
+
 /* hints spacing */
 .hintSectionTitle {
   margin-top: 8px;
