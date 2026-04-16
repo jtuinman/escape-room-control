@@ -25,9 +25,6 @@ h1 { margin: 0 0 12px; font-size: 24px; }
   text-align: center;
   min-width: 180px;
 }
-#stopTimerBtn {
-  margin-top: 10px;
-}
 h2 { margin: 0 0 10px; font-size: 16px; }
 .btn.active-state {
   background: #2b6cff;
@@ -104,7 +101,6 @@ h2 { margin: 0 0 10px; font-size: 16px; }
 /* hints spacing */
 .hintSectionTitle {
   margin-top: 8px;
-  padding-top: 6px;
   font-weight: 700;
 
   background: #eef2ff;

@@ -99,6 +99,8 @@
   let timerBaseAt = performance.now();
   let timerInterval = null;
 
+  let lastHintsRenderKey = null;
+
   function pad2(n){ return String(n).padStart(2, "0"); }
 
   function renderTimer() {
@@ -249,7 +251,7 @@ async function toggleTimer() {
     if (!ok) return;
 
     const r = await fetch("/api/poweroff", { method: "POST" });
-    if (r.ok) connEl.textContent = "Shutting down…";
+    if (r.ok) connDot.classList.add("disconnected");
   });
 
   rebootBtn.addEventListener("click", async () => {
@@ -257,7 +259,7 @@ async function toggleTimer() {
     if (!ok) return;
 
     const r = await fetch("/api/reboot", { method: "POST" });
-    if (r.ok) connEl.textContent = "Rebooting…";
+    if (r.ok) connDot.classList.add("disconnected");
   });
 
   function createHintItem(h) {
@@ -348,6 +350,16 @@ async function toggleTimer() {
   }
 
   function renderHints(gameState, hintsData) {
+    const key = JSON.stringify({
+      gameState,
+      hintsData
+    });
+
+    if (key === lastHintsRenderKey) {
+      return;
+    }
+
+    lastHintsRenderKey = key;
     const sceneEl = document.getElementById("hints-scene");
     const hintsEl = document.getElementById("hints");
 
@@ -458,7 +470,6 @@ accordionBlocks.forEach(block => {
       } catch (e) {}
     };
 
-    fetch("/api/push_full_state").catch(() => {});
   }
 
   (async () => {

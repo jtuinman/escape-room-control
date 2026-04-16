@@ -470,13 +470,11 @@ def index():
         gs = game_state
         lang = current_language
 
-    scene_hints = get_current_hints().get(gs, [])
     return render_template(
         "index.html",
         inputs=labels,
         states=list(VALID_GAME_STATES),
         game_state=gs,
-        scene_hints=scene_hints,
         language=lang,
         supported_languages=sorted(SUPPORTED_LANGUAGES),
     )
@@ -528,7 +526,6 @@ def api_language():
         "hints": get_hints_payload_for_state(gs),
         "ts": time.time(),
     })
-    publish_full_state(reason="language_change")
 
     return jsonify({"ok": True, "language": lang})
 
