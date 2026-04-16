@@ -190,7 +190,7 @@
     setGameState(data.game_state);
     setLanguage(data.language || "nl");
 
-    renderHints(data.game_state, data.hints || []);
+    renderHints(data.game_state, data.hints || {});
     for (const [label, state] of Object.entries(data.inputs || {})) {
       setInputDot(label, state);
     }
@@ -442,11 +442,11 @@ async function toggleTimer() {
           for (const [name, on] of Object.entries(evt.relays || {})) {
             setRelayButton(name, on);
           }
-          renderHints(evt.game_state, evt.hints || []);
+          renderHints(evt.game_state, evt.hints || {});
           applyTimer(evt.timer || { running:false, elapsed:0 });
         } else if (evt.type === "language") {
           setLanguage(evt.language || "nl");
-          renderHints(gameStateEl.textContent, evt.hints || []);
+          renderHints(gameStateEl.textContent, evt.hints || {});
         } else if (evt.type === "relay") {
           setRelayButton(evt.name, evt.on);
         } else if (evt.type === "relays" && evt.pattern) {
