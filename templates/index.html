@@ -100,6 +100,8 @@
   let timerInterval = null;
 
   let lastHintsRenderKey = null;
+  let lastRenderedTimerText = null;
+  let lastRenderedTimerState = null;
 
   function pad2(n){ return String(n).padStart(2, "0"); }
 
@@ -113,17 +115,27 @@
     const total = Math.floor(elapsed);
     const mm = Math.floor(total / 60);
     const ss = total % 60;
-    timerEl.textContent = `${pad2(mm)}:${pad2(ss)}`;
+    const timerText = `${pad2(mm)}:${pad2(ss)}`;
+
+    if (timerText !== lastRenderedTimerText) {
+      timerEl.textContent = timerText;
+      lastRenderedTimerText = timerText;
+    }
 
     const isOver15Min = elapsed >= 15 * 60;
     const isPaused = !timer.running && elapsed > 0;
+    const timerState = isOver15Min ? "danger" : isPaused ? "paused" : "normal";
 
-    timerEl.classList.remove("paused", "danger");
+    if (timerState !== lastRenderedTimerState) {
+      timerEl.classList.remove("paused", "danger");
 
-    if (isOver15Min) {
-      timerEl.classList.add("danger");
-    } else if (isPaused) {
-      timerEl.classList.add("paused");
+      if (timerState === "danger") {
+        timerEl.classList.add("danger");
+      } else if (timerState === "paused") {
+        timerEl.classList.add("paused");
+      }
+
+      lastRenderedTimerState = timerState;
     }
   }
 
