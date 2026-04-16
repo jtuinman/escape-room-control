@@ -296,7 +296,7 @@ async function toggleTimer() {
     const fragment = document.createDocumentFragment();
 
     const header = document.createElement("li");
-    header.className = `row compactRow ${titleClass}`;
+    header.className = `row compactRow ${titleClass} hintAccordionHeader`;
     header.style.cursor = "pointer";
 
     const titleText = document.createElement("span");
@@ -309,7 +309,7 @@ async function toggleTimer() {
     header.appendChild(toggleIcon);
 
     const wrapper = document.createElement("li");
-    wrapper.className = "hintPuzzleHints";
+    wrapper.className = "hintPuzzleHints hintAccordionBody";
 
     const innerList = document.createElement("ul");
     innerList.className = "list compact";
@@ -320,18 +320,28 @@ async function toggleTimer() {
 
     wrapper.appendChild(innerList);
 
-    let isOpen = startOpen;
-    wrapper.classList.toggle("hidden", !isOpen);
-    toggleIcon.textContent = isOpen ? "▼" : "▶";
-
-    header.addEventListener("click", () => {
-      isOpen = !isOpen;
-      wrapper.classList.toggle("hidden", !isOpen);
-      toggleIcon.textContent = isOpen ? "▼" : "▶";
-    });
+    wrapper.classList.toggle("hidden", !startOpen);
+    toggleIcon.textContent = startOpen ? "▼" : "▶";
 
     fragment.appendChild(header);
     fragment.appendChild(wrapper);
+
+    fragment._accordion = {
+      header,
+      wrapper,
+      toggleIcon,
+      get isOpen() {
+        return !wrapper.classList.contains("hidden");
+      },
+      open() {
+        wrapper.classList.remove("hidden");
+        toggleIcon.textContent = "▼";
+      },
+      close() {
+        wrapper.classList.add("hidden");
+        toggleIcon.textContent = "▶";
+      }
+    };
 
     return fragment;
   }
@@ -356,16 +366,47 @@ async function toggleTimer() {
       return;
     }
 
-  if (globalHints.length > 0) { 
-    hintsEl.appendChild(
-    createCollapsibleHintBlock("Algemeen", globalHints, "hintSectionTitle", false)
+const accordionBlocks = [];
+
+if (globalHints.length > 0) {
+  const globalBlock = createCollapsibleHintBlock(
+    "Algemeen",
+    globalHints,
+    "hintSectionTitle",
+    false
   );
+  accordionBlocks.push(globalBlock);
+  hintsEl.appendChild(globalBlock);
 }
 
-  puzzles.forEach((puzzle, index) => {
-    const block = createPuzzleBlock(puzzle, index === 0);
-    hintsEl.appendChild(block);
+puzzles.forEach((puzzle, index) => {
+  const block = createPuzzleBlock(puzzle, index === 0);
+  accordionBlocks.push(block);
+  hintsEl.appendChild(block);
+});
+
+function closeAllExcept(activeBlock) {
+  accordionBlocks.forEach(block => {
+    if (block !== activeBlock) {
+      block._accordion.close();
+    }
   });
+}
+
+accordionBlocks.forEach(block => {
+  const acc = block._accordion;
+  acc.header.addEventListener("click", () => {
+    const willOpen = !acc.isOpen;
+
+    closeAllExcept(block);
+
+    if (willOpen) {
+      acc.open();
+    } else {
+      acc.close();
+    }
+  });
+});
 
   }
   function connectSSE() {
