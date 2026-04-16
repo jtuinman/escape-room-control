@@ -294,6 +294,50 @@ async function toggleTimer() {
     return li;
   }
 
+  function createPuzzleBlock(puzzle) {
+    const fragment = document.createDocumentFragment();
+
+    const puzzleTitle = document.createElement("li");
+    puzzleTitle.className = "row compactRow hintPuzzleTitle";
+    puzzleTitle.style.cursor = "pointer";
+
+    const titleText = document.createElement("span");
+    titleText.innerHTML = `<strong>${puzzle.label || puzzle.id || "Puzzel"}</strong>`;
+
+    const toggleIcon = document.createElement("span");
+    toggleIcon.className = "hintToggleIcon";
+    toggleIcon.textContent = "▼";
+
+    puzzleTitle.appendChild(titleText);
+    puzzleTitle.appendChild(toggleIcon);
+
+    const hintsWrapper = document.createElement("li");
+    hintsWrapper.className = "hintPuzzleHints";
+
+    const innerList = document.createElement("ul");
+    innerList.className = "list compact";
+
+    const puzzleHints = puzzle.hints || [];
+    for (const h of puzzleHints) {
+      innerList.appendChild(createHintItem(h));
+    }
+
+    hintsWrapper.appendChild(innerList);
+
+    let isOpen = true;
+
+    puzzleTitle.addEventListener("click", () => {
+      isOpen = !isOpen;
+      hintsWrapper.classList.toggle("hidden", !isOpen);
+      toggleIcon.textContent = isOpen ? "▼" : "▶";
+    });
+
+    fragment.appendChild(puzzleTitle);
+    fragment.appendChild(hintsWrapper);
+
+    return fragment;
+  }
+
 function renderHints(gameState, hintsData) {
   const sceneEl = document.getElementById("hints-scene");
   const hintsEl = document.getElementById("hints");
@@ -326,17 +370,9 @@ function renderHints(gameState, hintsData) {
   }
 
   for (const puzzle of puzzles) {
-    const puzzleTitle = document.createElement("li");
-    puzzleTitle.className = "row compactRow hintPuzzleTitle";
-    puzzleTitle.innerHTML = `<strong>${puzzle.label || puzzle.id || "Puzzel"}</strong>`;
-    hintsEl.appendChild(puzzleTitle);
-
-    const puzzleHints = puzzle.hints || [];
-    for (const h of puzzleHints) {
-      hintsEl.appendChild(createHintItem(h));
-    }
-  }
-}
+    hintsEl.appendChild(createPuzzleBlock(puzzle));
+  }}
+  
   function connectSSE() {
     const es = new EventSource("/events");
 
