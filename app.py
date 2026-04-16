@@ -145,7 +145,7 @@ def build_hint_index(hints_cfg: dict) -> dict:
     index = {}
 
     # globale hints
-    for hint in hints_cfg.get("global", []):
+    for hint in hints_cfg.get("global", {}).get("hints", []):
         hint_id = hint.get("id")
         if hint_id:
             index[hint_id] = hint
@@ -210,8 +210,13 @@ def get_hints_payload_for_state(state_name: str) -> dict:
     hints_cfg = get_current_hints()
     scene_data = hints_cfg.get(state_name, {})
 
+    global_cfg = hints_cfg.get("global", {})
+
     return {
-        "global": hints_cfg.get("global", []),
+        "global": {
+            "label": global_cfg.get("label", ""),
+            "hints": global_cfg.get("hints", []),
+        },
         "puzzles": scene_data.get("puzzles", []),
     }
 

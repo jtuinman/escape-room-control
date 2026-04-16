@@ -382,7 +382,8 @@
 
       hintsEl.innerHTML = "";
 
-      const globalHints = hintsData?.global || [];
+      const globalLabel = hintsData?.global?.label || "Algemeen";
+      const globalHints = hintsData?.global?.hints || [];
       const puzzles = hintsData?.puzzles || [];
 
       if (globalHints.length === 0 && puzzles.length === 0) {
@@ -397,7 +398,7 @@
 
       if (globalHints.length > 0) {
         const globalBlock = createCollapsibleHintBlock(
-          "Algemeen",
+          globalLabel,
           globalHints,
           "hintSectionTitle",
           false
