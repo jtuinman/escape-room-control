@@ -97,6 +97,11 @@ h2 { margin: 0 0 10px; font-size: 16px; }
   margin-top: 10px;
   font-weight: 700;
   opacity: 0.9;
+  background: #eef2ff;        /* lichte blauw/paarse tint */
+  border: 1px solid #dbe4ff;
+  border-radius: 8px;
+
+  padding: 8px 10px;
 }
 
 .hintItem {
