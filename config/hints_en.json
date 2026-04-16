@@ -46,7 +46,7 @@
     "puzzles": [
       {
         "id": "kist",
-        "label": "Kist",
+        "label": "Chest",
         "hints": [
           {
             "id": "s1_p1_h1",
@@ -83,7 +83,7 @@
       },
       {
         "id": "sterrenbeelden",
-        "label": "Sterrenbeelden",
+        "label": "Star signs",
         "hints": [
           {
             "id": "s1_p3_h1",
@@ -124,7 +124,7 @@
       },
       {
         "id": "ladenkast",
-        "label": "Ladenkast",
+        "label": "Drawers",
         "hints": [
           {
             "id": "s1_p4_h1",
@@ -170,7 +170,7 @@
       },
       {
         "id": "boeken",
-        "label": "Boeken",
+        "label": "Books",
         "hints": [
           {
             "id": "s1_p5_h1",
@@ -246,7 +246,7 @@
       },
       {
         "id": "sleutelkastje",
-        "label": "Sleutelkastje",
+        "label": "Key box",
         "hints": [
           {
             "id": "s2_p2_h1",
