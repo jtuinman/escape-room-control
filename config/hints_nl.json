@@ -1,16 +1,107 @@
 {
-  "scene_1": [
-    { "id": "s1_h1", "label": "maak het niet stuk", "file": "01.ogg" },
-    { "id": "s1_h2", "label": "dat is niet de bedoeling", "file": "02.ogg" },
-    { "id": "s1_h3", "label": "eten in de koelkast", "file": "10.ogg" }
-  
+  "global": [
+    { "id": "g_h1", "label": "Maak het niet stuk!", "file": "01.ogg" },
+    { "id": "g_h2", "label": "NIet de bedoeling", "file": "02.ogg" },
+    { "id": "g_h3", "label": "Je bent goed bezig!", "file": "80.ogg" },
+    { "id": "g_h4", "label": "Er is niet veel tijd meer!", "file": "81.ogg" },
+    { "id": "g_h5", "label": "Heb je in alle kastjes gekeken?", "file": "82.ogg" },
+    { "id": "g_h6", "label": "Ja", "file": "83.ogg" },
+    { "id": "g_h7", "label": "Nee", "file": "84.ogg" }
   ],
-  "scene_2": [
-    { "id": "s2_h1", "label": "Scene 1 - Hint 2", "file": "hint2.mp3" },
-    { "id": "s2_h2", "label": "Scene 2 - Hint 3", "file": "hint3.mp3" }
-  ],
-  "end_game": [
-    { "id": "eg_h1", "label": "End game - Hint 1", "file": "hint1.mp3" }
-  ],
-  "idle": []
+  "idle": {
+    "puzzles": []
+  },
+  "scene_1": {
+    "puzzles": [
+      {
+        "id": "kist",
+        "label": "kist",
+        "hints": [
+          { "id": "s1_h1", "label": "eten in de koelkast", "file": "10.ogg" },
+          { "id": "s1_h2", "label": "monsters onder het bed", "file": "11.ogg" }
+        ]
+      },
+      {
+        "id": "scroll",
+        "label": "scroll",
+        "hints": [
+          { "id": "s1_p2_h1", "label": "Kleine houten kistje", "file": "20.ogg" },
+          { "id": "s1_p2_h2", "label": "Zijn er andere kistjes?", "file": "21.ogg" },
+          { "id": "s1_p2_h3", "label": "Kijk in de keuken", "file": "22.ogg" }
+        ]
+      },
+      {
+        "id": "sterrenbeelden",
+        "label": "sterrenbeelden",
+        "hints": [
+          { "id": "s1_p3_h1", "label": "Kijk omhoog", "file": "23.ogg" },
+          { "id": "s1_p3_h2", "label": "op welk sterrenbeeld richt de boogschutter?", "file": "24.ogg" },
+          { "id": "s1_p3_h3", "label": "in een hoek gedreven", "file": "25.ogg" },
+          { "id": "s1_p3_h4", "label": "er is maar 1 sterrenbeeld zichtbaar", "file": "26.ogg" },
+          { "id": "s1_p3_h5", "label": "pak de kaarten nog eens", "file": "27.ogg" },
+          { "id": "s1_p3_h6", "label": "steenbok mag optimistisch zijn", "file": "28.ogg" },
+          { "id": "s1_p3_h7", "label": "vind de remedie tegen de eigenschap", "file": "29.ogg" }        ]
+      },
+      {
+        "id": "ladenkast",
+        "label": "ladenkast",
+        "hints": [
+          { "id": "s1_p4_h1", "label": "Bekijk de ladenkast goed", "file": "30.ogg" },
+          { "id": "s1_p4_h2", "label": "Gebruik alleen wat je nodig hebt.", "file": "31.ogg" },
+          { "id": "s1_p4_h3", "label": "Gebruik de ingredienten van optimismo", "file": "32.ogg" },
+          { "id": "s1_p4_h4", "label": "Lees de Lexicon Potum nog eens door", "file": "33.ogg" },
+          { "id": "s1_p4_h5", "label": "Ingredient X ligt voor het grijpen", "file": "34.ogg" },
+          {"id": "s1_p4_h6", "label": "Alle lades zijn ontgrendeld", "file": "35.ogg" },
+          {"id": "s1_p4_h7", "label": "Begin helemaal opnieuw", "file": "36.ogg" },
+          {"id": "s1_p4_h8", "label": "Kijk in LP voor de positie van de lades", "file": "37.ogg" }
+        ]
+      },
+      {
+        "id": "boeken",
+        "label": "boeken",
+        "hints": [
+          { "id": "s1_p5_h1", "label": "Recent een goed boek gelezen?", "file": "40.ogg" },
+          { "id": "s1_p5_h2", "label": "Lees allebei een goed boek", "file": "41.ogg" },
+          { "id": "s1_p5_h3", "label": "Meer plekken met boeken dan je denkt", "file": "42.ogg" },
+          { "id": "s1_p5_h4", "label": "Werk samen om resultaat te behalen", "file": "43.ogg" },
+          { "id": "s1_p5_h5", "label": "Probeer iets tegelijk!", "file": "44.ogg" }
+        ]
+      }
+    ]
+  },
+"scene_2": {
+    "puzzles": [
+      {
+        "id": "pentagram",
+        "label": "pentagram",
+        "hints": [
+          { "id": "s2_p1_h1", "label": "Je moet een figuur maken", "file": "50.ogg" },
+          { "id": "s2_p1_h2", "label": "Heb je dat touw nog?", "file": "51.ogg" },
+          { "id": "s2_p1_h3", "label": "Wat is dat voor symbool?", "file": "52.ogg" },
+          { "id": "s2_p1_h4", "label": "Begin bij de witte pin", "file": "53.ogg" },
+          { "id": "s2_p1_h5", "label": "Duistere magie met een pentagram", "file": "54.ogg" },
+          { "id": "s2_p1_h6", "label": "Kijk naar de cijfers onder de knopen", "file": "55.ogg" },
+          { "id": "s2_p1_h7", "label": "Volg het touw voor de volgorde", "file": "56.ogg" }
+        ]
+      },
+      {
+        "id": "Sleutelkastje",
+        "label": "Sleutelkastje",
+        "hints": [
+          { "id": "s2_p2_h1", "label": "Sleutelkastje al geopend?", "file": "60.ogg" }
+        ]
+      }
+    ]
+  },
+  "end game": {
+    "puzzles": [
+      {
+        "id": "eind deur",
+        "label": "eind deur",
+        "hints": [
+          { "id": "s2_p3_h1", "label": "Draai aan de knop", "file": "70.ogg" }
+        ]
+      }
+    ]
+  }
 }
