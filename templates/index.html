@@ -283,49 +283,55 @@ async function toggleTimer() {
     return li;
   }
 
-  function createPuzzleBlock(puzzle, startOpen = false){
+  function createPuzzleBlock(puzzle, startOpen = false) {
+    return createCollapsibleHintBlock(
+      puzzle.label || puzzle.id || "Puzzel",
+      puzzle.hints || [],
+      "hintPuzzleTitle",
+      startOpen
+    );
+  }
+
+  function createCollapsibleHintBlock(title, hints, titleClass, startOpen = false) {
     const fragment = document.createDocumentFragment();
 
-    const puzzleTitle = document.createElement("li");
-    puzzleTitle.className = "row compactRow hintPuzzleTitle";
-    puzzleTitle.style.cursor = "pointer";
+    const header = document.createElement("li");
+    header.className = `row compactRow ${titleClass}`;
+    header.style.cursor = "pointer";
 
     const titleText = document.createElement("span");
-    titleText.innerHTML = `<strong>${puzzle.label || puzzle.id || "Puzzel"}</strong>`;
+    titleText.innerHTML = `<strong>${title}</strong>`;
 
     const toggleIcon = document.createElement("span");
     toggleIcon.className = "hintToggleIcon";
-    toggleIcon.textContent = "▼";
 
-    puzzleTitle.appendChild(titleText);
-    puzzleTitle.appendChild(toggleIcon);
+    header.appendChild(titleText);
+    header.appendChild(toggleIcon);
 
-    const hintsWrapper = document.createElement("li");
-    hintsWrapper.className = "hintPuzzleHints";
+    const wrapper = document.createElement("li");
+    wrapper.className = "hintPuzzleHints";
 
     const innerList = document.createElement("ul");
     innerList.className = "list compact";
 
-    const puzzleHints = puzzle.hints || [];
-    for (const h of puzzleHints) {
+    for (const h of (hints || [])) {
       innerList.appendChild(createHintItem(h));
     }
 
-    hintsWrapper.appendChild(innerList);
+    wrapper.appendChild(innerList);
 
     let isOpen = startOpen;
-
-    hintsWrapper.classList.toggle("hidden", !isOpen);
+    wrapper.classList.toggle("hidden", !isOpen);
     toggleIcon.textContent = isOpen ? "▼" : "▶";
 
-    puzzleTitle.addEventListener("click", () => {
+    header.addEventListener("click", () => {
       isOpen = !isOpen;
-      hintsWrapper.classList.toggle("hidden", !isOpen);
+      wrapper.classList.toggle("hidden", !isOpen);
       toggleIcon.textContent = isOpen ? "▼" : "▶";
     });
 
-    fragment.appendChild(puzzleTitle);
-    fragment.appendChild(hintsWrapper);
+    fragment.appendChild(header);
+    fragment.appendChild(wrapper);
 
     return fragment;
   }
@@ -350,48 +356,11 @@ async function toggleTimer() {
       return;
     }
 
-  if (globalHints.length > 0) {
-    const fragment = document.createDocumentFragment();
-
-    const sectionTitle = document.createElement("li");
-    sectionTitle.className = "row compactRow hintSectionTitle";
-    sectionTitle.style.cursor = "pointer";
-
-    const titleText = document.createElement("span");
-    titleText.innerHTML = `<strong>Algemeen</strong>`;
-
-    const toggleIcon = document.createElement("span");
-    toggleIcon.className = "hintToggleIcon";
-    toggleIcon.textContent = "▶";
-
-    sectionTitle.appendChild(titleText);
-    sectionTitle.appendChild(toggleIcon);
-
-    const wrapper = document.createElement("li");
-    wrapper.className = "hintPuzzleHints hidden";
-
-    const innerList = document.createElement("ul");
-    innerList.className = "list compact";
-
-    for (const h of globalHints) {
-      innerList.appendChild(createHintItem(h));
-    }
-
-    wrapper.appendChild(innerList);
-
-    let isOpen = false;
-
-    sectionTitle.addEventListener("click", () => {
-      isOpen = !isOpen;
-      wrapper.classList.toggle("hidden", !isOpen);
-      toggleIcon.textContent = isOpen ? "▼" : "▶";
-    });
-
-    fragment.appendChild(sectionTitle);
-    fragment.appendChild(wrapper);
-
-    hintsEl.appendChild(fragment);
-  }
+  if (globalHints.length > 0) { 
+    hintsEl.appendChild(
+    createCollapsibleHintBlock("Algemeen", globalHints, "hintSectionTitle", false)
+  );
+}
 
   puzzles.forEach((puzzle, index) => {
     const block = createPuzzleBlock(puzzle, index === 0);
