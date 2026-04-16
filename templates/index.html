@@ -103,6 +103,7 @@
   function renderTimer() {
     const now = performance.now();
     let elapsed = timer.elapsed;
+
     if (timer.running) elapsed += (now - timerBaseAt) / 1000.0;
     elapsed = Math.max(0, elapsed);
 
@@ -110,8 +111,19 @@
     const mm = Math.floor(total / 60);
     const ss = total % 60;
     timerEl.textContent = `${pad2(mm)}:${pad2(ss)}`;
-  }
 
+    const isOver15Min = elapsed >= 15 * 60;
+    const isPaused = !timer.running && elapsed > 0;
+
+    timerEl.classList.remove("paused", "danger");
+
+    if (isOver15Min) {
+      timerEl.classList.add("danger");
+    } else if (isPaused) {
+      timerEl.classList.add("paused");
+    }
+  }
+  
   function applyTimer(newTimer) {
     timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
     timerBaseAt = performance.now();
@@ -120,13 +132,15 @@
 
     renderTimer();
 
-    // ✅ CORRECTE LOGICA
+    const isOver15Min = timer.elapsed >= 15 * 60;
     const isPaused = !timer.running && timer.elapsed > 0;
 
-    if (isPaused) {
+    timerEl.classList.remove("paused", "danger");
+
+    if (isOver15Min) {
+      timerEl.classList.add("danger");
+    } else if (isPaused) {
       timerEl.classList.add("paused");
-    } else {
-      timerEl.classList.remove("paused");
     }
   }
 
