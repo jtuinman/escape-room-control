@@ -120,14 +120,16 @@
 
     renderTimer();
 
-    // 👇 VISUELE STATUS
-    if (timer.running) {
-      timerEl.classList.remove("paused");
-    } else {
+    // ✅ CORRECTE LOGICA
+    const isPaused = !timer.running && timer.elapsed > 0;
+
+    if (isPaused) {
       timerEl.classList.add("paused");
+    } else {
+      timerEl.classList.remove("paused");
     }
   }
-  
+
   function setInputDot(label, state) {
     const safe = String(label).replaceAll(" ", "_");
     const dot = document.getElementById(`dot-${safe}`);
