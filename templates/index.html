@@ -294,7 +294,7 @@ async function toggleTimer() {
     return li;
   }
 
-  function createPuzzleBlock(puzzle) {
+  function createPuzzleBlock(puzzle, startOpen = false){
     const fragment = document.createDocumentFragment();
 
     const puzzleTitle = document.createElement("li");
@@ -324,10 +324,10 @@ async function toggleTimer() {
 
     hintsWrapper.appendChild(innerList);
 
-    let isOpen = false;
+    let isOpen = startOpen;
 
-    hintsWrapper.classList.add("hidden");
-    toggleIcon.textContent = "▶";
+    hintsWrapper.classList.toggle("hidden", !isOpen);
+    toggleIcon.textContent = isOpen ? "▼" : "▶";
 
     puzzleTitle.addEventListener("click", () => {
       isOpen = !isOpen;
@@ -405,21 +405,10 @@ async function toggleTimer() {
   }
 
   puzzles.forEach((puzzle, index) => {
-    const block = createPuzzleBlock(puzzle);
-
-    // eerste puzzel openklappen
-    if (index === 0) {
-      const wrapper = block.childNodes[1];
-      const header = block.childNodes[0];
-
-      wrapper.classList.remove("hidden");
-
-      const icon = header.querySelector(".hintToggleIcon");
-      if (icon) icon.textContent = "▼";
-    }
-
+    const block = createPuzzleBlock(puzzle, index === 0);
     hintsEl.appendChild(block);
   });
+
   }
   function connectSSE() {
     const es = new EventSource("/events");
