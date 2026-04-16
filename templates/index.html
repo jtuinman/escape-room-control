@@ -316,7 +316,7 @@ function renderHints(gameState, hintsData) {
 
   if (globalHints.length > 0) {
     const sectionTitle = document.createElement("li");
-    sectionTitle.className = "row compactRow";
+    sectionTitle.className = "row compactRow hintSectionTitle";
     sectionTitle.innerHTML = `<strong>Algemeen</strong>`;
     hintsEl.appendChild(sectionTitle);
 
@@ -327,7 +327,7 @@ function renderHints(gameState, hintsData) {
 
   for (const puzzle of puzzles) {
     const puzzleTitle = document.createElement("li");
-    puzzleTitle.className = "row compactRow";
+    puzzleTitle.className = "row compactRow hintPuzzleTitle";
     puzzleTitle.innerHTML = `<strong>${puzzle.label || puzzle.id || "Puzzel"}</strong>`;
     hintsEl.appendChild(puzzleTitle);
 
