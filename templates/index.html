@@ -324,7 +324,10 @@ async function toggleTimer() {
 
     hintsWrapper.appendChild(innerList);
 
-    let isOpen = true;
+    let isOpen = false;
+
+    hintsWrapper.classList.add("hidden");
+    toggleIcon.textContent = "▶";
 
     puzzleTitle.addEventListener("click", () => {
       isOpen = !isOpen;
@@ -372,7 +375,7 @@ function renderHints(gameState, hintsData) {
   for (const puzzle of puzzles) {
     hintsEl.appendChild(createPuzzleBlock(puzzle));
   }}
-  
+
   function connectSSE() {
     const es = new EventSource("/events");
 
