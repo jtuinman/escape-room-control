@@ -326,18 +326,6 @@ def set_game_state(new_state: str, reason: str) -> None:
 
     apply_relay_pattern(new_state, reason=f"state:{reason}")
 
-    broadcaster.publish({
-        "type": "game_state",
-        "game_state": new_state,
-        "reason": reason,
-        "ts": time.time(),
-    })
-    broadcaster.publish({
-        "type": "timer",
-        "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
-        "reason": reason,
-        "ts": time.time(),
-    })
     publish_full_state(reason=f"state_change:{reason}")
 
 
