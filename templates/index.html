@@ -123,7 +123,7 @@
       timerEl.classList.add("paused");
     }
   }
-  
+
   function applyTimer(newTimer) {
     timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
     timerBaseAt = performance.now();
@@ -270,48 +270,73 @@ async function toggleTimer() {
     if (r.ok) connEl.textContent = "Rebooting…";
   });
 
-  function renderHints(gameState, hints) {
-    const sceneEl = document.getElementById("hints-scene");
-    const hintsEl = document.getElementById("hints");
+  function createHintItem(h) {
+    const li = document.createElement("li");
+    li.className = "row compactRow hintItem";
+    li.title = h.id || "";
 
-    if (sceneEl) sceneEl.textContent = gameState || "";
-    if (!hintsEl) return;
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = h.label || h.id;
 
-    hintsEl.innerHTML = "";
+    const play = document.createElement("span");
+    play.className = "hintPlay";
+    play.textContent = "▶";
 
-    if (!hints || hints.length === 0) {
-      const li = document.createElement("li");
-      li.className = "row compactRow";
-      li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
-      hintsEl.appendChild(li);
-      return;
-    }
+    li.appendChild(label);
+    li.appendChild(play);
 
-    for (const h of hints) {
-      const li = document.createElement("li");
-      li.className = "row compactRow hintItem";
-      li.title = h.id || "";
+    li.style.cursor = "pointer";
+    li.addEventListener("click", () => {
+      fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
+    });
 
-      const label = document.createElement("span");
-      label.className = "label";
-      label.textContent = h.label || h.id;
+    return li;
+  }
 
-      const play = document.createElement("span");
-      play.className = "hintPlay";
-      play.textContent = "▶";
+function renderHints(gameState, hintsData) {
+  const sceneEl = document.getElementById("hints-scene");
+  const hintsEl = document.getElementById("hints");
 
-      li.appendChild(label);
-      li.appendChild(play);
+  if (sceneEl) sceneEl.textContent = gameState || "";
+  if (!hintsEl) return;
 
-      li.style.cursor = "pointer";
-      li.addEventListener("click", () => {
-        fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
-      });
+  hintsEl.innerHTML = "";
 
-      hintsEl.appendChild(li);
+  const globalHints = hintsData?.global || [];
+  const puzzles = hintsData?.puzzles || [];
+
+  if (globalHints.length === 0 && puzzles.length === 0) {
+    const li = document.createElement("li");
+    li.className = "row compactRow";
+    li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+    hintsEl.appendChild(li);
+    return;
+  }
+
+  if (globalHints.length > 0) {
+    const sectionTitle = document.createElement("li");
+    sectionTitle.className = "row compactRow";
+    sectionTitle.innerHTML = `<strong>Algemeen</strong>`;
+    hintsEl.appendChild(sectionTitle);
+
+    for (const h of globalHints) {
+      hintsEl.appendChild(createHintItem(h));
     }
   }
 
+  for (const puzzle of puzzles) {
+    const puzzleTitle = document.createElement("li");
+    puzzleTitle.className = "row compactRow";
+    puzzleTitle.innerHTML = `<strong>${puzzle.label || puzzle.id || "Puzzel"}</strong>`;
+    hintsEl.appendChild(puzzleTitle);
+
+    const puzzleHints = puzzle.hints || [];
+    for (const h of puzzleHints) {
+      hintsEl.appendChild(createHintItem(h));
+    }
+  }
+}
   function connectSSE() {
     const es = new EventSource("/events");
 

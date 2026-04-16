@@ -143,13 +143,23 @@ def load_hints_config(lang: str) -> dict:
 
 def build_hint_index(hints_cfg: dict) -> dict:
     index = {}
-    for scene_hints in hints_cfg.values():
-        for hint in scene_hints:
-            hint_id = hint.get("id")
-            if hint_id:
-                index[hint_id] = hint
-    return index
 
+    # globale hints
+    for hint in hints_cfg.get("global", []):
+        hint_id = hint.get("id")
+        if hint_id:
+            index[hint_id] = hint
+
+    # scene -> puzzles -> hints
+    for state_name in VALID_GAME_STATES:
+        scene_data = hints_cfg.get(state_name, {})
+        for puzzle in scene_data.get("puzzles", []):
+            for hint in puzzle.get("hints", []):
+                hint_id = hint.get("id")
+                if hint_id:
+                    index[hint_id] = hint
+
+    return index
 
 def load_all_hints():
     hints_by_lang = {}
@@ -196,6 +206,14 @@ def get_hints_for_language(lang: str) -> dict:
 def get_current_hints() -> dict:
     return get_hints_for_language(current_language)
 
+def get_hints_payload_for_state(state_name: str) -> dict:
+    hints_cfg = get_current_hints()
+    scene_data = hints_cfg.get(state_name, {})
+
+    return {
+        "global": hints_cfg.get("global", []),
+        "puzzles": scene_data.get("puzzles", []),
+    }
 
 def find_hint_by_id(hint_id: str):
     return HINT_INDEX_BY_LANG[current_language].get(hint_id)
@@ -226,7 +244,7 @@ def publish_full_state(reason: str) -> None:
         "inputs": inputs,
         "relays": relays,
         "language": lang,
-        "hints": get_current_hints().get(gs, []),
+        "hints": get_hints_payload_for_state(gs),
         "timer": {
             "running": timer_running,
             "elapsed": get_timer_elapsed(),
@@ -482,7 +500,7 @@ def api_state():
         "language": lang,
         "inputs": inputs,
         "relays": relays,
-        "hints": get_current_hints().get(gs, []),
+        "hints": get_hints_payload_for_state(gs),
         "timer": {"running": timer_running, "elapsed": get_timer_elapsed()},
     })
 
@@ -507,7 +525,7 @@ def api_language():
     broadcaster.publish({
         "type": "language",
         "language": lang,
-        "hints": get_current_hints().get(gs, []),
+        "hints": get_hints_payload_for_state(gs),
         "ts": time.time(),
     })
     publish_full_state(reason="language_change")
