@@ -96,7 +96,7 @@
   "end_game": {
     "puzzles": [
       {
-        "id": "eind deur",
+        "id": "eind_deur",
         "label": "Eind deur",
         "hints": [
           { "id": "s2_p3_h1", "label": "Draai aan de knop", "file": "70.ogg" }
