@@ -89,8 +89,13 @@ h2 { margin: 0 0 10px; font-size: 16px; }
 .hintSectionTitle {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px solid rgba(255,255,255,0.08);
   font-weight: 700;
+
+  background: #eef2ff;
+  border: 1px solid #dbe4ff;
+  border-radius: 8px;
+
+  padding: 8px 10px;
 }
 
 .hintPuzzleTitle {
