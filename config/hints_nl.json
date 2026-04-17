@@ -5,37 +5,37 @@
       {
         "id": "g_h1",
         "label": "Maak het niet stuk!",
-        "file": "01.ogg"
+        "file": "01.mp3"
       },
       {
         "id": "g_h2",
         "label": "Niet de bedoeling",
-        "file": "02.ogg"
+        "file": "02.mp3"
       },
       {
         "id": "g_h3",
         "label": "Je bent goed bezig!",
-        "file": "80.ogg"
+        "file": "80.mp3"
       },
       {
         "id": "g_h4",
         "label": "Er is niet veel tijd meer!",
-        "file": "81.ogg"
+        "file": "81.mp3"
       },
       {
         "id": "g_h5",
         "label": "Heb je in alle kastjes gekeken?",
-        "file": "82.ogg"
+        "file": "82.mp3"
       },
       {
         "id": "g_h6",
         "label": "Ja",
-        "file": "83.ogg"
+        "file": "83.mp3"
       },
       {
         "id": "g_h7",
         "label": "Nee",
-        "file": "84.ogg"
+        "file": "84.mp3"
       }
     ]
   },
@@ -51,12 +51,12 @@
           {
             "id": "s1_p1_h1",
             "label": "Eten in de koelkast",
-            "file": "10.ogg"
+            "file": "10.mp3"
           },
           {
             "id": "s1_p1_h2",
             "label": "Monsters onder het bed",
-            "file": "11.ogg"
+            "file": "11.mp3"
           }
         ]
       },
@@ -67,17 +67,17 @@
           {
             "id": "s1_p2_h1",
             "label": "Kleine houten kistje",
-            "file": "20.ogg"
+            "file": "20.mp3"
           },
           {
             "id": "s1_p2_h2",
             "label": "Zijn er andere kistjes?",
-            "file": "21.ogg"
+            "file": "21.mp3"
           },
           {
             "id": "s1_p2_h3",
             "label": "Kijk in de keuken",
-            "file": "22.ogg"
+            "file": "22.mp3"
           }
         ]
       },
@@ -88,37 +88,37 @@
           {
             "id": "s1_p3_h1",
             "label": "Kijk omhoog",
-            "file": "23.ogg"
+            "file": "23.mp3"
           },
           {
             "id": "s1_p3_h2",
             "label": "Op welk sterrenbeeld richt de boogschutter?",
-            "file": "24.ogg"
+            "file": "24.mp3"
           },
           {
             "id": "s1_p3_h3",
             "label": "In een hoek gedreven",
-            "file": "25.ogg"
+            "file": "25.mp3"
           },
           {
             "id": "s1_p3_h4",
             "label": "Er is maar 1 sterrenbeeld zichtbaar",
-            "file": "26.ogg"
+            "file": "26.mp3"
           },
           {
             "id": "s1_p3_h5",
             "label": "Pak de kaarten nog eens",
-            "file": "27.ogg"
+            "file": "27.mp3"
           },
           {
             "id": "s1_p3_h6",
             "label": "Steenbok mag optimistisch zijn",
-            "file": "28.ogg"
+            "file": "28.mp3"
           },
           {
             "id": "s1_p3_h7",
             "label": "Vind de remedie tegen de eigenschap",
-            "file": "29.ogg"
+            "file": "29.mp3"
           }
         ]
       },
@@ -129,42 +129,42 @@
           {
             "id": "s1_p4_h1",
             "label": "Bekijk de ladenkast goed",
-            "file": "30.ogg"
+            "file": "30.mp3"
           },
           {
             "id": "s1_p4_h2",
             "label": "Gebruik alleen wat je nodig hebt.",
-            "file": "31.ogg"
+            "file": "31.mp3"
           },
           {
             "id": "s1_p4_h3",
             "label": "Gebruik de ingredienten van optimismo",
-            "file": "32.ogg"
+            "file": "32.mp3"
           },
           {
             "id": "s1_p4_h4",
             "label": "Lees de Lexicon Potum nog eens door",
-            "file": "33.ogg"
+            "file": "33.mp3"
           },
           {
             "id": "s1_p4_h5",
             "label": "Ingredient X ligt voor het grijpen",
-            "file": "34.ogg"
+            "file": "34.mp3"
           },
           {
             "id": "s1_p4_h6",
             "label": "Alle lades zijn ontgrendeld",
-            "file": "35.ogg"
+            "file": "35.mp3"
           },
           {
             "id": "s1_p4_h7",
             "label": "Begin helemaal opnieuw",
-            "file": "36.ogg"
+            "file": "36.mp3"
           },
           {
             "id": "s1_p4_h8",
             "label": "Kijk in LP voor de positie van de lades",
-            "file": "37.ogg"
+            "file": "37.mp3"
           }
         ]
       },
@@ -175,27 +175,27 @@
           {
             "id": "s1_p5_h1",
             "label": "Recent een goed boek gelezen?",
-            "file": "40.ogg"
+            "file": "40.mp3"
           },
           {
             "id": "s1_p5_h2",
             "label": "Lees allebei een goed boek",
-            "file": "41.ogg"
+            "file": "41.mp3"
           },
           {
             "id": "s1_p5_h3",
             "label": "Meer plekken met boeken dan je denkt",
-            "file": "42.ogg"
+            "file": "42.mp3"
           },
           {
             "id": "s1_p5_h4",
             "label": "Werk samen om resultaat te behalen",
-            "file": "43.ogg"
+            "file": "43.mp3"
           },
           {
             "id": "s1_p5_h5",
             "label": "Probeer iets tegelijk!",
-            "file": "44.ogg"
+            "file": "44.mp3"
           }
         ]
       }
@@ -210,37 +210,37 @@
           {
             "id": "s2_p1_h1",
             "label": "Je moet een figuur maken",
-            "file": "50.ogg"
+            "file": "50.mp3"
           },
           {
             "id": "s2_p1_h2",
             "label": "Heb je dat touw nog?",
-            "file": "51.ogg"
+            "file": "51.mp3"
           },
           {
             "id": "s2_p1_h3",
             "label": "Wat is dat voor symbool?",
-            "file": "52.ogg"
+            "file": "52.mp3"
           },
           {
             "id": "s2_p1_h4",
             "label": "Begin bij de witte pin",
-            "file": "53.ogg"
+            "file": "53.mp3"
           },
           {
             "id": "s2_p1_h5",
             "label": "Duistere magie met een pentagram",
-            "file": "54.ogg"
+            "file": "54.mp3"
           },
           {
             "id": "s2_p1_h6",
             "label": "Kijk naar de cijfers onder de knopen",
-            "file": "55.ogg"
+            "file": "55.mp3"
           },
           {
             "id": "s2_p1_h7",
             "label": "Volg het touw voor de volgorde",
-            "file": "56.ogg"
+            "file": "56.mp3"
           }
         ]
       },
@@ -251,7 +251,7 @@
           {
             "id": "s2_p2_h1",
             "label": "Sleutelkastje al geopend?",
-            "file": "60.ogg"
+            "file": "60.mp3"
           }
         ]
       }
@@ -266,7 +266,7 @@
           {
             "id": "s2_p3_h1",
             "label": "Draai aan de knop",
-            "file": "70.ogg"
+            "file": "70.mp3"
           }
         ]
       }
