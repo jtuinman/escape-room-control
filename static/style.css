@@ -5,7 +5,7 @@ body {
 }
 
 main {
-  max-width: 1800px;
+  max-width: 720px;
   margin: 24px auto;
   padding: 16px;
 }
@@ -82,11 +82,6 @@ h1 {
   background: #eee;
   cursor: pointer;
   font-weight: 700;
-  text-decoration: none;
-  color: inherit;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .btn:hover {
@@ -101,7 +96,6 @@ h1 {
 #timer {
   font-size: 44px;
   line-height: 1;
-  cursor: pointer;
 }
 
 #timer.paused {
@@ -168,36 +162,20 @@ h2 {
   margin: 0;
 }
 
+/* 2-koloms layout, valt op mobiel terug */
 .layout {
   display: grid;
   gap: 16px;
-}
-
-.layout-3col {
-  grid-template-columns: minmax(340px, 1.15fr) minmax(280px, 0.85fr) minmax(420px, 1.2fr);
-  align-items: start;
-}
-
-@media (max-width: 1400px) {
-  .layout-3col {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .camera-column {
-    grid-column: 1 / -1;
-  }
+  grid-template-columns: 1.2fr 0.8fr;
 }
 
 @media (max-width: 900px) {
-  .layout-3col {
+  .layout {
     grid-template-columns: 1fr;
-  }
-
-  .camera-column {
-    grid-column: auto;
   }
 }
 
+/* compact input rows */
 .compactRow {
   align-items: center;
   justify-content: space-between;
@@ -208,6 +186,7 @@ h2 {
   padding-right: 12px;
 }
 
+/* status dot */
 .dot {
   width: 18px;
   height: 18px;
@@ -246,12 +225,15 @@ h2 {
   background: #e74c3c;
 }
 
+/* hints spacing */
 .hintSectionTitle {
   margin-top: 8px;
   font-weight: 700;
+
   background: #eef2ff;
   border: 1px solid #dbe4ff;
   border-radius: 8px;
+
   padding: 8px 10px;
 }
 
@@ -260,26 +242,32 @@ h2 {
   font-weight: 700;
   opacity: 0.9;
   background: #eef2ff;
+  /* lichte blauw/paarse tint */
   border: 1px solid #dbe4ff;
   border-radius: 8px;
+
   padding: 8px 10px;
 }
 
 .hintItem {
   padding-left: 10px;
-  cursor: pointer;
-  transition: all 0.12s ease;
-  border: 1px solid transparent;
 }
 
 .hintsList .btn {
   margin: 6px 0;
 }
 
+/* hint play icon */
 .hintPlay {
   opacity: 0.8;
   font-size: 1.1em;
   font-weight: 700;
+}
+
+.hintItem {
+  cursor: pointer;
+  transition: all 0.12s ease;
+  border: 1px solid transparent;
 }
 
 .hintItem:hover {
@@ -304,6 +292,8 @@ h2 {
   padding-left: 8px;
 }
 
+
+/* scene controls duidelijker als primaire actie */
 button[data-state] {
   background: #f0f4ff;
   border: 1px solid #c9d8ff;
@@ -320,59 +310,127 @@ button[data-state].active-state {
   box-shadow: 0 0 0 2px rgba(43, 108, 255, 0.4);
 }
 
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
-.hints-header-row {
-  align-items: center;
-  justify-content: space-between;
+body {
+  min-height: 100vh;
 }
 
-.hints-title,
-.camera-section-title {
-  margin: 0;
-}
-
-.camera-section-header {
-  align-items: center;
-  justify-content: space-between;
-}
-
-.camera-grid {
+main {
+  width: min(1880px, calc(100vw - 24px));
+  max-width: 1880px;
+  height: calc(100vh - 24px);
+  margin: 12px auto;
+  padding: 12px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  overflow: hidden;
 }
 
-.camera-card {
-  border: 1px solid #e6e8ec;
-  border-radius: 10px;
-  background: #fafbfc;
-  padding: 10px;
+.header-row {
+  flex: 0 0 auto;
 }
 
-.camera-card-header {
+.layout {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.layout-3col {
+  grid-template-columns: minmax(480px, 1.1fr) minmax(340px, 0.78fr) minmax(620px, 1.42fr);
+}
+
+.col {
+  min-width: 0;
+  min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  flex-direction: column;
+}
+
+.card {
+  min-height: 0;
+}
+
+.col > .card:last-child {
+  margin-bottom: 0;
+}
+
+.col:first-child .card:last-child {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#hints {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.buttons {
+  margin-top: 8px;
+}
+
+.row {
+  padding: 10px 12px;
   margin-bottom: 8px;
 }
 
-.camera-title {
-  font-weight: 700;
+.camera-column > .card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.camera-section-header {
+  flex: 0 0 auto;
+  margin-bottom: 8px;
+}
+
+.camera-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.camera-card {
+  min-height: 0;
+  position: relative;
+  border-radius: 12px;
+  background: #111;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.camera-card-header {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.camera-open-btn {
+  pointer-events: auto;
+  opacity: 0.92;
 }
 
 .camera-frame-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #111;
+  position: absolute;
+  inset: 0;
+  background: #000;
 }
 
 .camera-frame {
@@ -386,16 +444,50 @@ button[data-state].active-state {
 .camera-placeholder {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  text-align: center;
-  color: #d9dde3;
-  font-weight: 600;
-  background: linear-gradient(180deg, rgba(30, 30, 30, 0.75), rgba(18, 18, 18, 0.92));
+  background: #111;
 }
 
-.camera-frame-wrap.has-stream .camera-placeholder {
-  display: none;
+.hints-header-row .muted {
+  margin-bottom: 0;
+}
+
+.hintItem,
+.hintAccordionHeader {
+  cursor: pointer;
+}
+
+@media (max-width: 1700px) {
+  main {
+    width: min(1660px, calc(100vw - 24px));
+  }
+
+  .layout-3col {
+    grid-template-columns: minmax(420px, 1.02fr) minmax(310px, 0.78fr) minmax(520px, 1.2fr);
+  }
+}
+
+@media (max-width: 1400px) {
+  html, body {
+    overflow: auto;
+  }
+
+  main {
+    height: auto;
+    overflow: visible;
+  }
+
+  .camera-grid {
+    grid-template-rows: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .camera-card {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 900px) {
+  .camera-grid {
+    grid-template-columns: 1fr;
+  }
 }
