@@ -2,17 +2,29 @@ body {
   font-family: system-ui, Arial, sans-serif;
   margin: 0;
   background: #f6f7f8;
+  height: 100vh;
+  overflow: hidden;
 }
 
 main {
-  max-width: 720px;
-  margin: 24px auto;
-  padding: 16px;
+  width: min(1880px, calc(100vw - 32px));
+  height: calc(100vh - 32px);
+  margin: 16px auto;
+  padding: 0 8px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 h1 {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 24px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .muted {
@@ -45,21 +57,6 @@ h1 {
   font-weight: 600;
 }
 
-.pill {
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-weight: 700;
-  background: #ddd;
-}
-
-.pill.active {
-  background: #c8f3d0;
-}
-
-.pill.inactive {
-  background: #f3c8c8;
-}
-
 .card {
   background: white;
   border-radius: 12px;
@@ -82,6 +79,8 @@ h1 {
   background: #eee;
   cursor: pointer;
   font-weight: 700;
+  text-decoration: none;
+  color: inherit;
 }
 
 .btn:hover {
@@ -96,6 +95,7 @@ h1 {
 #timer {
   font-size: 44px;
   line-height: 1;
+  cursor: pointer;
 }
 
 #timer.paused {
@@ -127,12 +127,6 @@ h2 {
   box-shadow: 0 0 0 2px rgba(43, 108, 255, 0.4);
 }
 
-.right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .btn.small {
   padding: 8px 10px;
   border-radius: 10px;
@@ -156,26 +150,52 @@ h2 {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  flex: 0 0 auto;
 }
 
-.header-row h1 {
-  margin: 0;
-}
-
-/* 2-koloms layout, valt op mobiel terug */
 .layout {
   display: grid;
   gap: 16px;
-  grid-template-columns: 1.2fr 0.8fr;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
+.layout-3col {
+  grid-template-columns: minmax(560px, 1.15fr) minmax(360px, 0.8fr) minmax(420px, 0.95fr);
 }
 
-/* compact input rows */
+.col {
+  min-width: 0;
+  min-height: 0;
+}
+
+.col > .card:last-child {
+  margin-bottom: 0;
+}
+
+.hints-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: calc(100% - 118px);
+}
+
+.hints-header-row {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hints-title,
+.hints-scene-wrap {
+  margin: 0;
+}
+
+#hints {
+  overflow: auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+
 .compactRow {
   align-items: center;
   justify-content: space-between;
@@ -186,7 +206,6 @@ h2 {
   padding-right: 12px;
 }
 
-/* status dot */
 .dot {
   width: 18px;
   height: 18px;
@@ -225,15 +244,12 @@ h2 {
   background: #e74c3c;
 }
 
-/* hints spacing */
 .hintSectionTitle {
   margin-top: 8px;
   font-weight: 700;
-
   background: #eef2ff;
   border: 1px solid #dbe4ff;
   border-radius: 8px;
-
   padding: 8px 10px;
 }
 
@@ -242,29 +258,13 @@ h2 {
   font-weight: 700;
   opacity: 0.9;
   background: #eef2ff;
-  /* lichte blauw/paarse tint */
   border: 1px solid #dbe4ff;
   border-radius: 8px;
-
   padding: 8px 10px;
 }
 
 .hintItem {
   padding-left: 10px;
-}
-
-.hintsList .btn {
-  margin: 6px 0;
-}
-
-/* hint play icon */
-.hintPlay {
-  opacity: 0.8;
-  font-size: 1.1em;
-  font-weight: 700;
-}
-
-.hintItem {
   cursor: pointer;
   transition: all 0.12s ease;
   border: 1px solid transparent;
@@ -281,6 +281,12 @@ h2 {
   background: #e9efff;
 }
 
+.hintPlay {
+  opacity: 0.8;
+  font-size: 1.1em;
+  font-weight: 700;
+}
+
 .hintToggleIcon {
   font-weight: 700;
   opacity: 0.8;
@@ -292,8 +298,6 @@ h2 {
   padding-left: 8px;
 }
 
-
-/* scene controls duidelijker als primaire actie */
 button[data-state] {
   background: #f0f4ff;
   border: 1px solid #c9d8ff;
@@ -310,184 +314,109 @@ button[data-state].active-state {
   box-shadow: 0 0 0 2px rgba(43, 108, 255, 0.4);
 }
 
-html, body {
+.cameraColumn,
+.camerasCard,
+.cameraGrid,
+.cameraItem {
+  min-height: 0;
+}
+
+.camerasCard {
   height: 100%;
-  overflow: hidden;
-}
-
-body {
-  min-height: 100vh;
-}
-
-main {
-  width: min(1880px, calc(100vw - 24px));
-  max-width: 1880px;
-  height: calc(100vh - 24px);
-  margin: 12px auto;
+  display: flex;
+  flex-direction: column;
   padding: 12px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
-.header-row {
-  flex: 0 0 auto;
-}
-
-.layout {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.layout-3col {
-  grid-template-columns: minmax(480px, 1.1fr) minmax(340px, 0.78fr) minmax(620px, 1.42fr);
-}
-
-.col {
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.card {
-  min-height: 0;
-}
-
-.col > .card:last-child {
-  margin-bottom: 0;
-}
-
-.col:first-child .card:last-child {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-#hints {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-.buttons {
-  margin-top: 8px;
-}
-
-.row {
-  padding: 10px 12px;
-  margin-bottom: 8px;
-}
-
-.camera-column > .card {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.camera-section-header {
-  flex: 0 0 auto;
-  margin-bottom: 8px;
-}
-
-.camera-grid {
-  flex: 1 1 auto;
-  min-height: 0;
+.cameraGrid {
   display: grid;
   grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
+  flex: 1 1 auto;
 }
 
-.camera-card {
-  min-height: 0;
+.cameraItem {
   position: relative;
-  border-radius: 12px;
+}
+
+.cameraFrameWrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
   background: #111;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
 }
 
-.camera-card-header {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
-  display: flex;
-  justify-content: flex-end;
-  pointer-events: none;
-}
-
-.camera-open-btn {
-  pointer-events: auto;
-  opacity: 0.92;
-}
-
-.camera-frame-wrap {
-  position: absolute;
-  inset: 0;
-  background: #000;
-}
-
-.camera-frame {
+.cameraFrame {
+  display: block;
   width: 100%;
   height: 100%;
   border: 0;
-  display: block;
   background: #000;
 }
 
-.camera-placeholder {
+.cameraOpenBtn {
   position: absolute;
-  inset: 0;
-  background: #111;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  opacity: 0.92;
 }
 
-.hints-header-row .muted {
-  margin-bottom: 0;
-}
-
-.hintItem,
-.hintAccordionHeader {
-  cursor: pointer;
-}
-
-@media (max-width: 1700px) {
-  main {
-    width: min(1660px, calc(100vw - 24px));
-  }
-
-  .layout-3col {
-    grid-template-columns: minmax(420px, 1.02fr) minmax(310px, 0.78fr) minmax(520px, 1.2fr);
-  }
-}
-
-@media (max-width: 1400px) {
-  html, body {
+@media (max-width: 1500px) {
+  body {
+    height: auto;
     overflow: auto;
   }
 
   main {
+    width: min(1280px, calc(100vw - 24px));
     height: auto;
-    overflow: visible;
+    margin: 12px auto;
   }
 
-  .camera-grid {
-    grid-template-rows: none;
+  .layout-3col {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cameraColumn {
+    grid-column: 1 / -1;
+  }
+
+  .camerasCard {
+    height: auto;
+  }
+
+  .cameraGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
   }
 
-  .camera-card {
+  .cameraFrameWrap {
     aspect-ratio: 16 / 9;
+    height: auto;
+  }
+
+  .hints-card {
+    height: auto;
+  }
+
+  #hints {
+    overflow: visible;
   }
 }
 
 @media (max-width: 900px) {
-  .camera-grid {
+  .layout-3col,
+  .cameraGrid {
     grid-template-columns: 1fr;
+  }
+
+  .header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
   }
 }

@@ -11,16 +11,17 @@
 <body>
   <main>
     <div class="header-row">
-      <h1 style="display:flex; align-items:center; gap:10px;">
+      <h1 class="header-title">
         Escape Room Control
         <span id="connDot" class="connDot"></span>
       </h1>
-      <div class="buttons">
+      <div class="buttons header-buttons">
         <button class="btn" id="lang-nl" type="button">NL</button>
         <button class="btn" id="lang-en" type="button">EN</button>
       </div>
     </div>
-    <div class="layout">
+
+    <div class="layout layout-3col">
       <div class="col">
         <section class="card">
           <div class="row">
@@ -41,14 +42,15 @@
           </div>
         </section>
 
-        <section class="card">
-          <div class="row" style="align-items:center; justify-content:space-between;">
-            <h2 style="margin:0;">Hints</h2>
-            <div class="muted">Scene: <span id="hints-scene"></span></div>
+        <section class="card hints-card">
+          <div class="row hints-header-row">
+            <h2 class="hints-title">Hints</h2>
+            <div class="muted hints-scene-wrap">Scene: <span id="hints-scene"></span></div>
           </div>
           <ul id="hints" class="list compact"></ul>
         </section>
       </div>
+
       <div class="col">
         <section class="card">
           <h2>Inputs</h2>
@@ -81,14 +83,52 @@
         </section>
       </div>
 
+      <div class="col cameraColumn">
+        <section class="card camerasCard">
+          <div class="cameraGrid">
+            <div class="cameraItem" id="camera-card-cam1">
+              <div class="cameraFrameWrap">
+                <iframe class="cameraFrame" id="camera-frame-cam1" title="Camera 1" loading="lazy" allowfullscreen
+                  referrerpolicy="no-referrer"></iframe>
+                <a class="btn small cameraOpenBtn hidden" id="camera-open-cam1" target="_blank"
+                  rel="noopener noreferrer">open</a>
+              </div>
+            </div>
+
+            <div class="cameraItem" id="camera-card-cam2">
+              <div class="cameraFrameWrap">
+                <iframe class="cameraFrame" id="camera-frame-cam2" title="Camera 2" loading="lazy" allowfullscreen
+                  referrerpolicy="no-referrer"></iframe>
+                <a class="btn small cameraOpenBtn hidden" id="camera-open-cam2" target="_blank"
+                  rel="noopener noreferrer">open</a>
+              </div>
+            </div>
+
+            <div class="cameraItem" id="camera-card-cam3">
+              <div class="cameraFrameWrap">
+                <iframe class="cameraFrame" id="camera-frame-cam3" title="Camera 3" loading="lazy" allowfullscreen
+                  referrerpolicy="no-referrer"></iframe>
+                <a class="btn small cameraOpenBtn hidden" id="camera-open-cam3" target="_blank"
+                  rel="noopener noreferrer">open</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
   </main>
 
   <script>
+    const CAMERA_STREAMS = {
+      cam1: { url: "" },
+      cam2: { url: "" },
+      cam3: { url: "" }
+    };
+
     const connDot = document.getElementById("connDot");
     connDot.classList.add("disconnected");
     const gameStateEl = document.getElementById("gameState");
     const timerEl = document.getElementById("timer");
-    timerEl.style.cursor = "pointer";
     timerEl.addEventListener("click", () => {
       toggleTimer();
     });
@@ -104,6 +144,25 @@
     let lastHintsRenderKey = null;
     let lastRenderedTimerText = null;
     let lastRenderedTimerState = null;
+
+    function initCameras() {
+      Object.entries(CAMERA_STREAMS).forEach(([key, cfg]) => {
+        const frame = document.getElementById(`camera-frame-${key}`);
+        const openBtn = document.getElementById(`camera-open-${key}`);
+        const url = String(cfg?.url || "").trim();
+        if (!frame || !openBtn) return;
+
+        if (url) {
+          frame.src = url;
+          openBtn.href = url;
+          openBtn.classList.remove("hidden");
+        } else {
+          frame.removeAttribute("src");
+          openBtn.removeAttribute("href");
+          openBtn.classList.add("hidden");
+        }
+      });
+    }
 
     function pad2(n) { return String(n).padStart(2, "0"); }
 
@@ -433,8 +492,8 @@
           }
         });
       });
-
     }
+
     function connectSSE() {
       const es = new EventSource("/events");
 
@@ -479,13 +538,12 @@
               setRelayButton(name, on);
             }
           }
-
         } catch (e) { }
       };
-
     }
 
     (async () => {
+      initCameras();
       await loadInitial();
       connectSSE();
     })();
