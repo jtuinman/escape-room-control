@@ -66,6 +66,13 @@ VALID_GAME_STATES = ("idle", "scene_1", "scene_2", "end_game")
 # =========================
 CONFIG_DIR = Path("config")
 LANGUAGE_FILE = CONFIG_DIR / "language.txt"
+CAMERA_STREAMS_FILE = CONFIG_DIR / "camera_streams.json"
+
+DEFAULT_CAMERA_STREAMS = {
+    "cam1": {"url": ""},
+    "cam2": {"url": ""},
+    "cam3": {"url": ""},
+}
 SUPPORTED_LANGUAGES = {"nl", "en"}
 DEFAULT_LANGUAGE = "nl"
 
@@ -129,6 +136,30 @@ game_state: str = "idle"
 timer_running: bool = False
 timer_started_at: Optional[float] = None
 timer_elapsed_base: float = 0.0
+
+
+def load_camera_streams() -> dict:
+    streams = json.loads(json.dumps(DEFAULT_CAMERA_STREAMS))
+
+    try:
+        raw = CAMERA_STREAMS_FILE.read_text(encoding="utf-8")
+        loaded = json.loads(raw)
+    except FileNotFoundError:
+        return streams
+    except (json.JSONDecodeError, OSError):
+        return streams
+
+    if not isinstance(loaded, dict):
+        return streams
+
+    for key in streams:
+        value = loaded.get(key, {})
+        if isinstance(value, dict):
+            streams[key]["url"] = str(value.get("url", "")).strip()
+        elif isinstance(value, str):
+            streams[key]["url"] = value.strip()
+
+    return streams
 
 
 def load_hints_config(lang: str) -> dict:
@@ -468,6 +499,7 @@ def index():
         game_state=gs,
         language=lang,
         supported_languages=sorted(SUPPORTED_LANGUAGES),
+        camera_streams=load_camera_streams(),
     )
 
 

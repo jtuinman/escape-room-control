@@ -119,11 +119,7 @@
   </main>
 
   <script>
-    const CAMERA_STREAMS = {
-      cam1: { url: "http://192.168.68.134:8889/cam/" },
-      cam2: { url: "http://192.168.68.131:8889/cam/" },
-      cam3: { url: "" }
-    };
+    const CAMERA_STREAMS = {{ camera_streams | tojson }};
 
     const connDot = document.getElementById("connDot");
     connDot.classList.add("disconnected");
