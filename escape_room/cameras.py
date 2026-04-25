@@ -4,9 +4,9 @@ from .config import CAMERA_STREAMS_FILE
 
 
 DEFAULT_CAMERA_STREAMS = {
-    "cam1": {"url": ""},
-    "cam2": {"url": ""},
-    "cam3": {"url": ""},
+    "cam1": {"url": "", "visible": True},
+    "cam2": {"url": "", "visible": True},
+    "cam3": {"url": "", "visible": True},
 }
 
 
@@ -35,9 +35,11 @@ def load_camera_streams() -> dict:
 
         if isinstance(value, dict):
             streams[key]["url"] = str(value.get("url", "")).strip()
+            streams[key]["visible"] = bool(value.get("visible", True))
             if "label" in value:
                 streams[key]["label"] = str(value.get("label", "")).strip()
         elif isinstance(value, str):
             streams[key]["url"] = value.strip()
+            streams[key]["visible"] = True
 
     return streams

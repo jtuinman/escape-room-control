@@ -60,15 +60,19 @@ def get_camera_ui_config() -> List[dict]:
         if isinstance(cfg, dict):
             label = str(cfg.get("label", "")).strip()
             url = str(cfg.get("url", "")).strip()
+            visible = bool(cfg.get("visible", True))
         elif isinstance(cfg, str):
             url = cfg.strip()
+            visible = True
+        else:
+            visible = True
 
         cameras.append({
             "id": camera_id,
             "label": label or _camera_label_fallback(camera_id),
             "url": url,
             "order": order,
-            "visible": True,
+            "visible": visible,
         })
 
     return cameras

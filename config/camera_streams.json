@@ -1,11 +1,17 @@
 {
   "cam1": {
-    "url": "http://192.168.68.131:8889/cam/"
+    "label": "Camera 1",
+    "url": "http://192.168.68.131:8889/cam/",
+    "visible": true
   },
   "cam2": {
-    "url": "http://192.168.68.132:8889/cam/"
+    "label": "Camera 2",
+    "url": "http://192.168.68.132:8889/cam/",
+    "visible": false
   },
   "cam3": {
-    "url": "http://192.168.68.135:8889/cam/"
+    "label": "Camera 3",
+    "url": "http://192.168.68.135:8889/cam/",
+    "visible": false
   }
 }
