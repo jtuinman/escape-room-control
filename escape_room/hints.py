@@ -53,27 +53,17 @@ def get_hints_for_language(ctx, lang: str) -> dict:
     lang = (lang or DEFAULT_LANGUAGE).lower()
     if lang not in SUPPORTED_LANGUAGES:
         lang = DEFAULT_LANGUAGE
-    return ctx.hints_by_lang[lang]
+    return ctx.get_hints_for_language(lang)
 
 
 def get_current_hints(ctx) -> dict:
-    return get_hints_for_language(ctx, ctx.current_language)
+    return get_hints_for_language(ctx, ctx.snapshot_language())
 
 
 def get_hints_payload_for_state(ctx, state_name: str) -> dict:
-    hints_cfg = get_current_hints(ctx)
-    scene_data = hints_cfg.get(state_name, {})
-
-    global_cfg = hints_cfg.get("global", {})
-
-    return {
-        "global": {
-            "label": global_cfg.get("label", ""),
-            "hints": global_cfg.get("hints", []),
-        },
-        "puzzles": scene_data.get("puzzles", []),
-    }
+    with ctx.lock:
+        return ctx.get_hints_payload_for_state_locked(state_name)
 
 
 def find_hint_by_id(ctx, hint_id: str):
-    return ctx.hint_index_by_lang[ctx.current_language].get(hint_id)
+    return ctx.find_hint_by_id(hint_id)

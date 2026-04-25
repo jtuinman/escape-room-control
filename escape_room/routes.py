@@ -9,10 +9,10 @@ from mqtt_sound import bg_start, bg_stop, bg_switch, hint_play, panic, set_langu
 
 from .cameras import load_camera_streams
 from .config import INPUTS, SUPPORTED_LANGUAGES, VALID_GAME_STATES
-from .hints import find_hint_by_id, get_hints_payload_for_state
+from .hints import find_hint_by_id
 from .relays import toggle_relay
 from .state import save_language, set_game_state
-from .timer import get_timer_elapsed, toggle_timer
+from .timer import toggle_timer
 
 
 _BG_FILE_RE = re.compile(r"^state\d+\.mp3$", re.IGNORECASE)
@@ -28,16 +28,14 @@ def register_routes(app, ctx) -> None:
     @app.route("/")
     def index():
         labels = list(INPUTS.keys())
-        with ctx.lock:
-            gs = ctx.game_state
-            lang = ctx.current_language
+        snapshot = ctx.snapshot_index()
 
         return render_template(
             "index.html",
             inputs=labels,
             states=list(VALID_GAME_STATES),
-            game_state=gs,
-            language=lang,
+            game_state=snapshot["game_state"],
+            language=snapshot["language"],
             supported_languages=sorted(SUPPORTED_LANGUAGES),
             camera_streams=load_camera_streams(),
         )
@@ -48,19 +46,15 @@ def register_routes(app, ctx) -> None:
 
     @app.route("/api/state")
     def api_state():
-        with ctx.lock:
-            gs = ctx.game_state
-            lang = ctx.current_language
-            inputs = dict(ctx.current_inputs)
-            relays = dict(ctx.current_relays)
+        snapshot = ctx.snapshot_state()
 
         return jsonify({
-            "game_state": gs,
-            "language": lang,
-            "inputs": inputs,
-            "relays": relays,
-            "hints": get_hints_payload_for_state(ctx, gs),
-            "timer": {"running": ctx.timer_running, "elapsed": get_timer_elapsed(ctx)},
+            "game_state": snapshot["game_state"],
+            "language": snapshot["language"],
+            "inputs": snapshot["inputs"],
+            "relays": snapshot["relays"],
+            "hints": snapshot["hints"],
+            "timer": snapshot["timer"],
         })
 
     @app.route("/api/language", methods=["POST"])
@@ -71,21 +65,19 @@ def register_routes(app, ctx) -> None:
         if new_lang not in SUPPORTED_LANGUAGES:
             return jsonify({"ok": False, "error": "invalid_language"}), 400
 
-        with ctx.lock:
-            ctx.current_language = save_language(new_lang)
-            lang = ctx.current_language
-            gs = ctx.game_state
+        lang = save_language(new_lang)
+        snapshot = ctx.set_language(lang)
 
-        mqtt_set_language(lang)
+        mqtt_set_language(snapshot["language"])
 
         ctx.broadcaster.publish({
             "type": "language",
-            "language": lang,
-            "hints": get_hints_payload_for_state(ctx, gs),
+            "language": snapshot["language"],
+            "hints": snapshot["hints"],
             "ts": time.time(),
         })
 
-        return jsonify({"ok": True, "language": lang})
+        return jsonify({"ok": True, "language": snapshot["language"]})
 
     @app.route("/api/set_state", methods=["POST"])
     def api_set_state():
@@ -100,18 +92,19 @@ def register_routes(app, ctx) -> None:
     @app.route("/api/timer/toggle", methods=["POST"])
     def api_timer_toggle():
         action = toggle_timer(ctx)
+        timer = ctx.snapshot_timer()
 
         return jsonify({
             "ok": True,
             "action": action,
-            "timer": {"running": ctx.timer_running, "elapsed": get_timer_elapsed(ctx)},
+            "timer": timer,
         })
 
     @app.route("/api/relay/toggle", methods=["POST"])
     def api_relay_toggle():
         data = request.get_json(silent=True) or {}
         name = str(data.get("name", "")).strip()
-        if name not in ctx.relay_devices:
+        if not ctx.has_relay_device(name):
             return jsonify({"ok": False, "error": "unknown_relay"}), 400
 
         new = toggle_relay(ctx, name)
@@ -119,10 +112,7 @@ def register_routes(app, ctx) -> None:
 
     @app.route("/api/poweroff", methods=["POST"])
     def api_poweroff():
-        with ctx.lock:
-            is_idle = (ctx.game_state == "idle")
-
-        if not is_idle:
+        if not ctx.is_idle():
             return jsonify({"ok": False, "error": "not_idle"}), 403
 
         ctx.broadcaster.publish({
@@ -141,10 +131,7 @@ def register_routes(app, ctx) -> None:
 
     @app.route("/api/reboot", methods=["POST"])
     def api_reboot():
-        with ctx.lock:
-            is_idle = (ctx.game_state == "idle")
-
-        if not is_idle:
+        if not ctx.is_idle():
             return jsonify({"ok": False, "error": "not_idle"}), 403
 
         ctx.broadcaster.publish({

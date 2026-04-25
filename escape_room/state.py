@@ -3,8 +3,6 @@ import time
 from mqtt_sound import bg_start, bg_switch, panic
 
 from .config import DEFAULT_LANGUAGE, LANGUAGE_FILE, SUPPORTED_LANGUAGES, VALID_GAME_STATES
-from .hints import get_hints_payload_for_state
-from .timer import get_timer_elapsed, now_mono
 
 
 def load_language() -> str:
@@ -27,24 +25,17 @@ def save_language(lang: str) -> str:
 
 
 def publish_full_state(ctx, reason: str) -> None:
-    with ctx.lock:
-        gs = ctx.game_state
-        inputs = dict(ctx.current_inputs)
-        lang = ctx.current_language
-        relays = dict(ctx.current_relays)
+    snapshot = ctx.snapshot_state()
 
     evt = {
         "type": "full_state",
         "reason": reason,
-        "game_state": gs,
-        "inputs": inputs,
-        "relays": relays,
-        "language": lang,
-        "hints": get_hints_payload_for_state(ctx, gs),
-        "timer": {
-            "running": ctx.timer_running,
-            "elapsed": get_timer_elapsed(ctx),
-        },
+        "game_state": snapshot["game_state"],
+        "inputs": snapshot["inputs"],
+        "relays": snapshot["relays"],
+        "language": snapshot["language"],
+        "hints": snapshot["hints"],
+        "timer": snapshot["timer"],
         "ts": time.time(),
     }
     ctx.broadcaster.publish(evt)
@@ -54,30 +45,14 @@ def set_game_state(ctx, new_state: str, reason: str) -> None:
     if new_state not in VALID_GAME_STATES:
         return
 
-    with ctx.lock:
-        ctx.game_state = new_state
+    side_effect = ctx.transition_game_state(new_state)
 
-        if new_state == "idle":
-            panic()
-            ctx.timer_running = False
-            ctx.timer_started_at = None
-            ctx.timer_elapsed_base = 0.0
-
-        elif new_state == "scene_1":
-            bg_start("state1.mp3")
-            if (
-                (not ctx.timer_running)
-                and (ctx.timer_started_at is None)
-                and (ctx.timer_elapsed_base == 0.0)
-            ):
-                ctx.timer_started_at = now_mono()
-                ctx.timer_running = True
-
-        elif new_state == "scene_2":
-            bg_switch("state2.mp3")
-
-        elif new_state == "end_game":
-            bg_switch("state3.mp3")
+    if side_effect == ("panic", None):
+        panic()
+    elif side_effect and side_effect[0] == "bg_start":
+        bg_start(side_effect[1])
+    elif side_effect and side_effect[0] == "bg_switch":
+        bg_switch(side_effect[1])
 
     from .relays import apply_relay_pattern
 

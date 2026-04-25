@@ -9,12 +9,11 @@ def init_relays(ctx) -> None:
     for name, cfg in RELAYS.items():
         pin = int(cfg["pin"])
         dev = OutputDevice(pin, active_high=RELAY_ACTIVE_HIGH, initial_value=False)
-        ctx.relay_devices[name] = dev
-        ctx.current_relays[name] = False
+        ctx.register_relay_device(name, dev)
 
 
 def relays_off(ctx, reason: str) -> None:
-    for dev in ctx.relay_devices.values():
+    for dev in ctx.get_relay_devices().values():
         dev.off()
     ctx.broadcaster.publish({
         "type": "relays",
@@ -29,15 +28,12 @@ def apply_relay_pattern(ctx, state_name: str, reason: str) -> None:
     if not pattern:
         return
 
-    for relay_name, on in pattern.items():
-        dev = ctx.relay_devices.get(relay_name)
-        if not dev:
-            continue
+    actions = ctx.apply_relay_pattern_decision(pattern)
+    for dev, on in actions:
         if on:
             dev.on()
         else:
             dev.off()
-        ctx.current_relays[relay_name] = bool(on)
 
     ctx.broadcaster.publish({
         "type": "relays",
@@ -49,12 +45,7 @@ def apply_relay_pattern(ctx, state_name: str, reason: str) -> None:
 
 
 def toggle_relay(ctx, name: str):
-    with ctx.lock:
-        cur = bool(ctx.current_relays.get(name, False))
-        new = not cur
-        ctx.current_relays[name] = new
-
-    dev = ctx.relay_devices[name]
+    dev, new = ctx.decide_relay_toggle(name)
     if new:
         dev.on()
     else:

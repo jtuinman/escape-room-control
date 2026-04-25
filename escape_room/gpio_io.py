@@ -23,10 +23,7 @@ def logical_active_from_button(btn: Button) -> bool:
 
 def set_input_state(ctx, label: str, is_active: bool) -> None:
     state = "ACTIVE" if is_active else "INACTIVE"
-    with ctx.lock:
-        prev = ctx.current_inputs.get(label)
-        ctx.previous_inputs[label] = prev if prev is not None else state
-        ctx.current_inputs[label] = state
+    ctx.set_input_state(label, state)
 
     ctx.broadcaster.publish({
         "type": "input",
@@ -44,10 +41,10 @@ def get_label_by_role(role: str) -> Optional[str]:
 
 
 def evaluate_rules_on_change(ctx, changed_label: str) -> None:
-    with ctx.lock:
-        gs = ctx.game_state
-        snapshot = dict(ctx.current_inputs)
-        prev_snapshot = dict(ctx.previous_inputs)
+    rule_snapshot = ctx.snapshot_rule_inputs()
+    gs = rule_snapshot["game_state"]
+    snapshot = rule_snapshot["inputs"]
+    prev_snapshot = rule_snapshot["previous_inputs"]
 
     pb1 = get_label_by_role("pb1")
     pb2 = get_label_by_role("pb2")
@@ -97,19 +94,19 @@ def init_gpio(ctx) -> None:
 
         btn = Button(pin, pull_up=True, active_state=None, bounce_time=bounce_time)
 
-        ctx.devices[label] = InputDevice(
+        ctx.register_input_device(label, InputDevice(
             label=label,
             pin=pin,
             bounce_time=bounce_time,
             role=role,
             button=btn,
-        )
+        ))
 
         set_input_state(ctx, label, logical_active_from_button(btn))
 
         def on_change(lab=label):
-            dev = ctx.devices[lab].button
-            set_input_state(ctx, lab, logical_active_from_button(dev))
+            btn = ctx.get_input_button(lab)
+            set_input_state(ctx, lab, logical_active_from_button(btn))
             evaluate_rules_on_change(ctx, lab)
 
         btn.when_pressed = on_change

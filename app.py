@@ -19,7 +19,7 @@ def main() -> None:
     init_relays(context)
     init_gpio(context)
     set_game_state(context, "idle", reason="boot_to_idle")
-    mqtt_set_language(context.current_language)
+    mqtt_set_language(context.snapshot_language())
     app.run(host=HOST, port=PORT, debug=False, threaded=True)
 
 
