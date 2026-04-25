@@ -31,6 +31,20 @@ ACTIVE_WHEN_OPEN = True
 
 VALID_GAME_STATES = ("idle", "scene_1", "scene_2", "end_game")
 
+STATE_LABELS = {
+    "idle": "idle",
+    "scene_1": "scene 1",
+    "scene_2": "scene 2",
+    "end_game": "end game",
+}
+
+RELAY_LABELS = {
+    "relay_1": "lamp",
+    "relay_2": "spot",
+    "relay_3": "niet beschikbaar",
+    "relay_4": "magneet",
+}
+
 CONFIG_DIR = Path("config")
 LANGUAGE_FILE = CONFIG_DIR / "language.txt"
 CAMERA_STREAMS_FILE = CONFIG_DIR / "camera_streams.json"

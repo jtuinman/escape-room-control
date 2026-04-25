@@ -7,12 +7,12 @@ from flask import Response, abort, jsonify, render_template, request
 
 from mqtt_sound import bg_start, bg_stop, bg_switch, hint_play, panic, set_language as mqtt_set_language
 
-from .cameras import load_camera_streams
 from .config import INPUTS, SUPPORTED_LANGUAGES, VALID_GAME_STATES
 from .hints import find_hint_by_id
 from .relays import toggle_relay
 from .state import save_language, set_game_state
 from .timer import toggle_timer
+from .ui_config import get_ui_config
 
 
 _BG_FILE_RE = re.compile(r"^state\d+\.mp3$", re.IGNORECASE)
@@ -29,15 +29,15 @@ def register_routes(app, ctx) -> None:
     def index():
         labels = list(INPUTS.keys())
         snapshot = ctx.snapshot_index()
+        ui_config = get_ui_config()
 
         return render_template(
             "index.html",
             inputs=labels,
-            states=list(VALID_GAME_STATES),
             game_state=snapshot["game_state"],
             language=snapshot["language"],
             supported_languages=sorted(SUPPORTED_LANGUAGES),
-            camera_streams=load_camera_streams(),
+            ui_config=ui_config,
         )
 
     @app.route("/panel")
@@ -47,6 +47,7 @@ def register_routes(app, ctx) -> None:
     @app.route("/api/state")
     def api_state():
         snapshot = ctx.snapshot_state()
+        ui_config = get_ui_config()
 
         return jsonify({
             "game_state": snapshot["game_state"],
@@ -55,6 +56,9 @@ def register_routes(app, ctx) -> None:
             "relays": snapshot["relays"],
             "hints": snapshot["hints"],
             "timer": snapshot["timer"],
+            "states": ui_config["states"],
+            "relays_meta": ui_config["relays"],
+            "cameras": ui_config["cameras"],
         })
 
     @app.route("/api/language", methods=["POST"])

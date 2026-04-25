@@ -29,10 +29,14 @@ def load_camera_streams() -> dict:
     if not isinstance(loaded, dict):
         raise RuntimeError(f"{CAMERA_STREAMS_FILE} root must be a JSON object")
 
-    for key in streams:
-        value = loaded.get(key, {})
+    for key, value in loaded.items():
+        if key not in streams:
+            streams[key] = {"url": ""}
+
         if isinstance(value, dict):
             streams[key]["url"] = str(value.get("url", "")).strip()
+            if "label" in value:
+                streams[key]["label"] = str(value.get("label", "")).strip()
         elif isinstance(value, str):
             streams[key]["url"] = value.strip()
 

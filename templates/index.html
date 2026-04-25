@@ -34,12 +34,7 @@
             </div>
           </div>
 
-          <div class="buttons">
-            <button class="btn" data-state="idle">idle</button>
-            <button class="btn" data-state="scene_1">scene 1</button>
-            <button class="btn" data-state="scene_2">scene 2</button>
-            <button class="btn" data-state="end_game">end game</button>
-          </div>
+          <div class="buttons" id="stateButtons"></div>
         </section>
 
         <section class="card hints-card">
@@ -66,12 +61,7 @@
 
         <section class="card">
           <h2>Relays</h2>
-          <div class="buttons" id="relayButtons">
-            <button class="btn" data-relay="relay_1" id="relay-btn-relay_1">lamp</button>
-            <button class="btn" data-relay="relay_2" id="relay-btn-relay_2">spot</button>
-            <button class="btn" data-relay="relay_3" id="relay-btn-relay_3">niet beschikbaar</button>
-            <button class="btn" data-relay="relay_4" id="relay-btn-relay_4">magneet</button>
-          </div>
+          <div class="buttons" id="relayButtons"></div>
         </section>
 
         <section class="card">
@@ -85,40 +75,13 @@
 
       <div class="col cameraColumn">
         <section class="card camerasCard">
-          <div class="cameraGrid">
-            <div class="cameraItem" id="camera-card-cam1">
-              <div class="cameraFrameWrap">
-                <iframe class="cameraFrame" id="camera-frame-cam1" title="Camera 1" loading="lazy" allowfullscreen
-                  referrerpolicy="no-referrer"></iframe>
-                <a class="btn small cameraOpenBtn hidden" id="camera-open-cam1" target="_blank"
-                  rel="noopener noreferrer">open</a>
-              </div>
-            </div>
-
-            <div class="cameraItem" id="camera-card-cam2">
-              <div class="cameraFrameWrap">
-                <iframe class="cameraFrame" id="camera-frame-cam2" title="Camera 2" loading="lazy" allowfullscreen
-                  referrerpolicy="no-referrer"></iframe>
-                <a class="btn small cameraOpenBtn hidden" id="camera-open-cam2" target="_blank"
-                  rel="noopener noreferrer">open</a>
-              </div>
-            </div>
-
-            <div class="cameraItem" id="camera-card-cam3">
-              <div class="cameraFrameWrap">
-                <iframe class="cameraFrame" id="camera-frame-cam3" title="Camera 3" loading="lazy" allowfullscreen
-                  referrerpolicy="no-referrer"></iframe>
-                <a class="btn small cameraOpenBtn hidden" id="camera-open-cam3" target="_blank"
-                  rel="noopener noreferrer">open</a>
-              </div>
-            </div>
-          </div>
+          <div class="cameraGrid" id="cameraGrid"></div>
         </section>
       </div>
     </div>
   </main>
 
-  <script type="application/json" id="app-config">{{ {"camera_streams": camera_streams} | tojson }}</script>
+  <script type="application/json" id="app-config">{{ ui_config | tojson }}</script>
   <script src="/static/app.js"></script>
 </body>
 

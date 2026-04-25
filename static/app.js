@@ -3,7 +3,11 @@
 (function () {
   const appConfigEl = document.getElementById("app-config");
   const appConfig = appConfigEl ? JSON.parse(appConfigEl.textContent) : {};
-  const CAMERA_STREAMS = appConfig.camera_streams || {};
+  let uiMeta = {
+    states: appConfig.states || [],
+    relays: appConfig.relays || [],
+    cameras: appConfig.cameras || []
+  };
 
   const connDot = document.getElementById("connDot");
   connDot.classList.add("disconnected");
@@ -16,6 +20,9 @@
   const rebootBtn = document.getElementById("rebootBtn");
   const langNlBtn = document.getElementById("lang-nl");
   const langEnBtn = document.getElementById("lang-en");
+  const stateButtonsEl = document.getElementById("stateButtons");
+  const relayButtonsEl = document.getElementById("relayButtons");
+  const cameraGridEl = document.getElementById("cameraGrid");
 
   let timer = { running: false, elapsed: 0 };
   let timerBaseAt = performance.now();
@@ -25,22 +32,137 @@
   let lastRenderedTimerText = null;
   let lastRenderedTimerState = null;
 
-  function initCameras() {
-    Object.entries(CAMERA_STREAMS).forEach(([key, cfg]) => {
-      const frame = document.getElementById(`camera-frame-${key}`);
-      const openBtn = document.getElementById(`camera-open-${key}`);
-      const url = String(cfg?.url || "").trim();
-      if (!frame || !openBtn) return;
+  function orderedItems(items) {
+    return (items || [])
+      .filter(item => item && item.visible !== false)
+      .slice()
+      .sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+  }
+
+  function applyMetadata(data) {
+    let changed = false;
+
+    if (Array.isArray(data.states)) {
+      uiMeta.states = data.states;
+      changed = true;
+    }
+    if (Array.isArray(data.relays_meta)) {
+      uiMeta.relays = data.relays_meta;
+      changed = true;
+    } else if (Array.isArray(data.relays)) {
+      uiMeta.relays = data.relays;
+      changed = true;
+    }
+    if (Array.isArray(data.cameras)) {
+      uiMeta.cameras = data.cameras;
+      changed = true;
+    }
+
+    if (changed) {
+      renderStaticControls();
+    }
+  }
+
+  function renderStaticControls() {
+    renderStateButtons();
+    renderRelayButtons();
+    renderCameras();
+  }
+
+  function renderStateButtons() {
+    if (!stateButtonsEl) return;
+    stateButtonsEl.innerHTML = "";
+
+    orderedItems(uiMeta.states).forEach(state => {
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.type = "button";
+      btn.dataset.state = state.id;
+      btn.textContent = state.label || state.id;
+      btn.disabled = state.enabled === false || state.selectable === false;
+      btn.addEventListener("click", () => setState(state.id));
+      stateButtonsEl.appendChild(btn);
+    });
+  }
+
+  function renderRelayButtons() {
+    if (!relayButtonsEl) return;
+    relayButtonsEl.innerHTML = "";
+
+    orderedItems(uiMeta.relays).forEach(relay => {
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.type = "button";
+      btn.dataset.relay = relay.id;
+      btn.id = `relay-btn-${relay.id}`;
+      btn.textContent = relay.label || relay.id;
+      btn.disabled = relay.enabled === false;
+      btn.addEventListener("click", async () => {
+        const name = btn.dataset.relay;
+        const r = await fetch("/api/relay/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name })
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        setRelayButton(data.name, data.on);
+      });
+      relayButtonsEl.appendChild(btn);
+    });
+  }
+
+  function renderCameras() {
+    if (!cameraGridEl) return;
+    cameraGridEl.innerHTML = "";
+
+    const cameras = orderedItems(uiMeta.cameras);
+    cameraGridEl.style.setProperty("--camera-count", Math.max(cameras.length, 1));
+
+    cameras.forEach(camera => {
+      const key = camera.id;
+      const url = String(camera.url || "").trim();
+
+      const item = document.createElement("div");
+      item.className = "cameraItem";
+      item.id = `camera-card-${key}`;
+
+      const wrap = document.createElement("div");
+      wrap.className = "cameraFrameWrap";
+
+      const frame = document.createElement("iframe");
+      frame.className = "cameraFrame";
+      frame.id = `camera-frame-${key}`;
+      frame.title = camera.label || key;
+      frame.loading = "lazy";
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = "no-referrer";
 
       if (url) {
         frame.src = url;
+      } else {
+        frame.removeAttribute("src");
+      }
+
+      const openBtn = document.createElement("a");
+      openBtn.className = "btn small cameraOpenBtn hidden";
+      openBtn.id = `camera-open-${key}`;
+      openBtn.target = "_blank";
+      openBtn.rel = "noopener noreferrer";
+      openBtn.textContent = "open";
+
+      if (url) {
         openBtn.href = url;
         openBtn.classList.remove("hidden");
       } else {
-        frame.removeAttribute("src");
         openBtn.removeAttribute("href");
         openBtn.classList.add("hidden");
       }
+
+      wrap.appendChild(frame);
+      wrap.appendChild(openBtn);
+      item.appendChild(wrap);
+      cameraGridEl.appendChild(item);
     });
   }
 
@@ -132,6 +254,7 @@
   async function loadInitial() {
     const r = await fetch("/api/state", { cache: "no-store" });
     const data = await r.json();
+    applyMetadata(data);
     setGameState(data.game_state);
     setLanguage(data.language || "nl");
 
@@ -178,26 +301,8 @@
     setLanguage(data.language || lang);
   }
 
-  document.querySelectorAll("button[data-state]").forEach(btn => {
-    btn.addEventListener("click", () => setState(btn.dataset.state));
-  });
-
   langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
   langEnBtn.addEventListener("click", () => setUiLanguage("en"));
-
-  document.querySelectorAll("button[data-relay]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const name = btn.dataset.relay;
-      const r = await fetch("/api/relay/toggle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
-      });
-      if (!r.ok) return;
-      const data = await r.json();
-      setRelayButton(data.name, data.on);
-    });
-  });
 
   shutdownBtn.addEventListener("click", async () => {
     const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt afsluiten?");
@@ -398,6 +503,7 @@
         } else if (evt.type === "timer") {
           applyTimer(evt.timer);
         } else if (evt.type === "full_state") {
+          applyMetadata(evt);
           setGameState(evt.game_state);
           setLanguage(evt.language || "nl");
           for (const [label, state] of Object.entries(evt.inputs || {})) {
@@ -426,7 +532,7 @@
 
   (async () => {
     try {
-      initCameras();
+      renderStaticControls();
       await loadInitial();
       connectSSE();
     } catch (e) {

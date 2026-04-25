@@ -330,7 +330,7 @@ button[data-state].active-state {
 
 .cameraGrid {
   display: grid;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--camera-count, 3), minmax(0, 1fr));
   gap: 12px;
   flex: 1 1 auto;
 }
@@ -390,7 +390,7 @@ button[data-state].active-state {
   }
 
   .cameraGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     grid-template-rows: none;
   }
 
