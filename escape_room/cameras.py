@@ -18,11 +18,16 @@ def load_camera_streams() -> dict:
         loaded = json.loads(raw)
     except FileNotFoundError:
         return streams
-    except (json.JSONDecodeError, OSError):
-        return streams
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"{CAMERA_STREAMS_FILE} contains invalid JSON at line {exc.lineno}, "
+            f"column {exc.colno}: {exc.msg}"
+        ) from exc
+    except OSError as exc:
+        raise RuntimeError(f"{CAMERA_STREAMS_FILE} could not be read: {exc}") from exc
 
     if not isinstance(loaded, dict):
-        return streams
+        raise RuntimeError(f"{CAMERA_STREAMS_FILE} root must be a JSON object")
 
     for key in streams:
         value = loaded.get(key, {})

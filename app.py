@@ -3,6 +3,7 @@ from flask import Flask
 
 from escape_room import EscapeRoomContext
 from escape_room.config import HOST, PORT
+from escape_room.config_validation import validate_startup_config
 from escape_room.gpio_io import init_gpio
 from escape_room.relays import init_relays
 from escape_room.routes import register_routes
@@ -11,11 +12,14 @@ from mqtt_sound import set_language as mqtt_set_language
 
 
 app = Flask(__name__)
-context = EscapeRoomContext.create()
-register_routes(app, context)
 
 
 def main() -> None:
+    validate_startup_config()
+
+    context = EscapeRoomContext.create()
+    register_routes(app, context)
+
     init_relays(context)
     init_gpio(context)
     set_game_state(context, "idle", reason="boot_to_idle")
