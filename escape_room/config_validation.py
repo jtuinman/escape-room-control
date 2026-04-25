@@ -6,7 +6,6 @@ from typing import Any, Dict, Iterable, Optional, Tuple
 from . import config
 
 
-ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".ogg"}
 CAMERA_IDS_EXPECTED_BY_FRONTEND = {"cam1", "cam2", "cam3"}
 REQUIRED_STATE_MACHINE_ROLES = {"pb1", "pb2", "t1", "t2"}
 URL_PREFIXES = ("http://", "https://", "rtsp://")
@@ -414,8 +413,11 @@ def _validate_hint_list(
             result.error(f"{hint_path}.file must be a filename without path components")
 
         ext = Path(filename).suffix.lower()
-        if ext not in ALLOWED_AUDIO_EXTENSIONS:
-            result.error(f"{hint_path}.file extension must be one of {sorted(ALLOWED_AUDIO_EXTENSIONS)}")
+        if ext not in config.ALLOWED_HINT_AUDIO_EXTENSIONS:
+            result.error(
+                f"{hint_path}.file extension must be one of "
+                f"{sorted(config.ALLOWED_HINT_AUDIO_EXTENSIONS)}"
+            )
         elif _non_empty_str(hint_id):
             hint_extensions[hint_id] = ext
 

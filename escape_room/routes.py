@@ -7,7 +7,7 @@ from flask import Response, abort, jsonify, render_template, request
 
 from mqtt_sound import bg_start, bg_stop, bg_switch, hint_play, panic, set_language as mqtt_set_language
 
-from .config import INPUTS, SUPPORTED_LANGUAGES, VALID_GAME_STATES
+from .config import BACKGROUND_AUDIO_EXTENSIONS, INPUTS, SUPPORTED_LANGUAGES, VALID_GAME_STATES
 from .hints import find_hint_by_id
 from .relays import toggle_relay
 from .state import save_language, set_game_state
@@ -20,6 +20,8 @@ _BG_FILE_RE = re.compile(r"^state\d+\.mp3$", re.IGNORECASE)
 
 def _validate_bg_file(filename: str) -> str:
     if not _BG_FILE_RE.match(filename):
+        abort(400, "Invalid background file")
+    if not any(filename.lower().endswith(ext) for ext in BACKGROUND_AUDIO_EXTENSIONS):
         abort(400, "Invalid background file")
     return filename
 
@@ -58,7 +60,10 @@ def register_routes(app, ctx) -> None:
             "timer": snapshot["timer"],
             "states": ui_config["states"],
             "relays_meta": ui_config["relays"],
+            "inputs_meta": ui_config["inputs"],
             "cameras": ui_config["cameras"],
+            "languages": ui_config["languages"],
+            "text": ui_config["text"],
         })
 
     @app.route("/api/language", methods=["POST"])

@@ -6,8 +6,12 @@
   let uiMeta = {
     states: appConfig.states || [],
     relays: appConfig.relays || [],
-    cameras: appConfig.cameras || []
+    inputs: appConfig.inputs || [],
+    cameras: appConfig.cameras || [],
+    languages: appConfig.languages || {},
+    text: appConfig.text || {}
   };
+  let currentLanguage = "nl";
 
   const connDot = document.getElementById("connDot");
   connDot.classList.add("disconnected");
@@ -56,6 +60,16 @@
     if (Array.isArray(data.cameras)) {
       uiMeta.cameras = data.cameras;
       changed = true;
+    }
+    if (Array.isArray(data.inputs_meta)) {
+      uiMeta.inputs = data.inputs_meta;
+      changed = true;
+    }
+    if (data.languages && typeof data.languages === "object") {
+      uiMeta.languages = data.languages;
+    }
+    if (data.text && typeof data.text === "object") {
+      uiMeta.text = data.text;
     }
 
     if (changed) {
@@ -247,8 +261,14 @@
   }
 
   function setLanguage(lang) {
+    currentLanguage = lang || "nl";
     langNlBtn.classList.toggle("active-state", lang === "nl");
     langEnBtn.classList.toggle("active-state", lang === "en");
+  }
+
+  function uiText(key) {
+    const langText = uiMeta.text[currentLanguage] || uiMeta.text.nl || {};
+    return langText[key] || key;
   }
 
   async function loadInitial() {
@@ -424,14 +444,14 @@
 
     hintsEl.innerHTML = "";
 
-    const globalLabel = hintsData?.global?.label || "Algemeen";
+    const globalLabel = hintsData?.global?.label || uiText("global_hints_label");
     const globalHints = hintsData?.global?.hints || [];
     const puzzles = hintsData?.puzzles || [];
 
     if (globalHints.length === 0 && puzzles.length === 0) {
       const li = document.createElement("li");
       li.className = "row compactRow";
-      li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+      li.innerHTML = `<span class="muted">${uiText("no_hints")}</span>`;
       hintsEl.appendChild(li);
       return;
     }

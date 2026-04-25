@@ -38,17 +38,25 @@ ACTIVE_WHEN_OPEN = True
 
 VALID_GAME_STATES = ("idle", "scene_1", "scene_2", "end_game")
 
-STATE_LABELS = {
-    "idle": "idle",
-    "scene_1": "scene 1",
-    "scene_2": "scene 2",
-    "end_game": "end game",
+STATE_UI = {
+    "idle": {"label": "idle", "order": 0},
+    "scene_1": {"label": "scene 1", "order": 1},
+    "scene_2": {"label": "scene 2", "order": 2},
+    "end_game": {"label": "end game", "order": 3},
 }
 
-RELAY_LABELS = {
-    "relay_1": "lamp",
-    "relay_2": "spot",
-    "relay_4": "magneet",
+RELAY_UI = {
+    "relay_1": {"label": "lamp", "order": 0},
+    "relay_2": {"label": "spot", "order": 1},
+    "relay_4": {"label": "magneet", "order": 2},
+}
+
+INPUT_UI = {
+    "pb1": {"label": "pushbutton 1"},
+    "pb2": {"label": "pushbutton 2"},
+    "t1": {"label": "toggle 1"},
+    "t2": {"label": "toggle 2"},
+    "rs1": {"label": "reed switch"},
 }
 
 CONFIG_DIR = Path("config")
@@ -57,6 +65,26 @@ CAMERA_STREAMS_FILE = CONFIG_DIR / "camera_streams.json"
 
 SUPPORTED_LANGUAGES = {"nl", "en"}
 DEFAULT_LANGUAGE = "nl"
+
+LANGUAGE_UI = {
+    "nl": {"label": "Nederlands", "short_label": "NL"},
+    "en": {"label": "English", "short_label": "EN"},
+}
+
+UI_TEXT = {
+    "nl": {
+        "global_hints_label": "Algemeen",
+        "no_hints": "Geen hints voor deze scene.",
+    },
+    "en": {
+        "global_hints_label": "Global",
+        "no_hints": "No hints for this scene.",
+    },
+}
+
+# Hint audio intentionally accepts both formats: NL currently uses .mp3, EN uses .ogg.
+ALLOWED_HINT_AUDIO_EXTENSIONS = {".mp3", ".ogg"}
+BACKGROUND_AUDIO_EXTENSIONS = {".mp3"}
 
 HINTS_CONFIG_PATHS = {
     "nl": CONFIG_DIR / "hints_nl.json",
