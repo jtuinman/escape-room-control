@@ -1,0 +1,436 @@
+"use strict";
+
+(function () {
+  const appConfigEl = document.getElementById("app-config");
+  const appConfig = appConfigEl ? JSON.parse(appConfigEl.textContent) : {};
+  const CAMERA_STREAMS = appConfig.camera_streams || {};
+
+  const connDot = document.getElementById("connDot");
+  connDot.classList.add("disconnected");
+  const gameStateEl = document.getElementById("gameState");
+  const timerEl = document.getElementById("timer");
+  timerEl.addEventListener("click", () => {
+    toggleTimer();
+  });
+  const shutdownBtn = document.getElementById("shutdownBtn");
+  const rebootBtn = document.getElementById("rebootBtn");
+  const langNlBtn = document.getElementById("lang-nl");
+  const langEnBtn = document.getElementById("lang-en");
+
+  let timer = { running: false, elapsed: 0 };
+  let timerBaseAt = performance.now();
+  let timerInterval = null;
+
+  let lastHintsRenderKey = null;
+  let lastRenderedTimerText = null;
+  let lastRenderedTimerState = null;
+
+  function initCameras() {
+    Object.entries(CAMERA_STREAMS).forEach(([key, cfg]) => {
+      const frame = document.getElementById(`camera-frame-${key}`);
+      const openBtn = document.getElementById(`camera-open-${key}`);
+      const url = String(cfg?.url || "").trim();
+      if (!frame || !openBtn) return;
+
+      if (url) {
+        frame.src = url;
+        openBtn.href = url;
+        openBtn.classList.remove("hidden");
+      } else {
+        frame.removeAttribute("src");
+        openBtn.removeAttribute("href");
+        openBtn.classList.add("hidden");
+      }
+    });
+  }
+
+  function pad2(n) { return String(n).padStart(2, "0"); }
+
+  function renderTimer() {
+    const now = performance.now();
+    let elapsed = timer.elapsed;
+
+    if (timer.running) elapsed += (now - timerBaseAt) / 1000.0;
+    elapsed = Math.max(0, elapsed);
+
+    const total = Math.floor(elapsed);
+    const mm = Math.floor(total / 60);
+    const ss = total % 60;
+    const timerText = `${pad2(mm)}:${pad2(ss)}`;
+
+    if (timerText !== lastRenderedTimerText) {
+      timerEl.textContent = timerText;
+      lastRenderedTimerText = timerText;
+    }
+
+    const isOver15Min = elapsed >= 15 * 60;
+    const isPaused = !timer.running && elapsed > 0;
+    const timerState = isOver15Min ? "danger" : isPaused ? "paused" : "normal";
+
+    if (timerState !== lastRenderedTimerState) {
+      timerEl.classList.remove("paused", "danger");
+
+      if (timerState === "danger") {
+        timerEl.classList.add("danger");
+      } else if (timerState === "paused") {
+        timerEl.classList.add("paused");
+      }
+
+      lastRenderedTimerState = timerState;
+    }
+  }
+
+  function applyTimer(newTimer) {
+    timer = { running: !!newTimer.running, elapsed: Number(newTimer.elapsed || 0) };
+    timerBaseAt = performance.now();
+
+    if (!timerInterval) timerInterval = setInterval(renderTimer, 250);
+
+    renderTimer();
+  }
+
+  function setInputDot(label, state) {
+    const safe = String(label).replaceAll(" ", "_");
+    const dot = document.getElementById(`dot-${safe}`);
+    if (!dot) return;
+
+    dot.classList.remove("active", "inactive", "unknown");
+    dot.title = state;
+
+    if (state === "ACTIVE") dot.classList.add("active");
+    else if (state === "INACTIVE") dot.classList.add("inactive");
+    else dot.classList.add("unknown");
+  }
+
+  function setRelayButton(name, on) {
+    const btn = document.getElementById(`relay-btn-${name}`);
+    if (!btn) return;
+    btn.classList.toggle("active-state", !!on);
+  }
+
+  function setGameState(st) {
+    gameStateEl.textContent = st;
+
+    document.querySelectorAll("button[data-state]").forEach(btn => {
+      btn.classList.toggle("active-state", btn.dataset.state === st);
+    });
+
+    if (st === "idle") {
+      shutdownBtn.classList.remove("hidden");
+      rebootBtn.classList.remove("hidden");
+    } else {
+      shutdownBtn.classList.add("hidden");
+      rebootBtn.classList.add("hidden");
+    }
+  }
+
+  function setLanguage(lang) {
+    langNlBtn.classList.toggle("active-state", lang === "nl");
+    langEnBtn.classList.toggle("active-state", lang === "en");
+  }
+
+  async function loadInitial() {
+    const r = await fetch("/api/state", { cache: "no-store" });
+    const data = await r.json();
+    setGameState(data.game_state);
+    setLanguage(data.language || "nl");
+
+    renderHints(data.game_state, data.hints || {});
+    for (const [label, state] of Object.entries(data.inputs || {})) {
+      setInputDot(label, state);
+    }
+    for (const [name, on] of Object.entries(data.relays || {})) {
+      setRelayButton(name, on);
+    }
+    applyTimer(data.timer || { running: false, elapsed: 0 });
+  }
+
+  async function setState(st) {
+    await fetch("/api/set_state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state: st })
+    });
+  }
+
+  async function toggleTimer() {
+    const r = await fetch("/api/timer/toggle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (!r.ok) return;
+
+    const data = await r.json();
+    if (data.timer) {
+      applyTimer(data.timer);
+    }
+  }
+
+  async function setUiLanguage(lang) {
+    const r = await fetch("/api/language", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: lang })
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    setLanguage(data.language || lang);
+  }
+
+  document.querySelectorAll("button[data-state]").forEach(btn => {
+    btn.addEventListener("click", () => setState(btn.dataset.state));
+  });
+
+  langNlBtn.addEventListener("click", () => setUiLanguage("nl"));
+  langEnBtn.addEventListener("click", () => setUiLanguage("en"));
+
+  document.querySelectorAll("button[data-relay]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const name = btn.dataset.relay;
+      const r = await fetch("/api/relay/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      });
+      if (!r.ok) return;
+      const data = await r.json();
+      setRelayButton(data.name, data.on);
+    });
+  });
+
+  shutdownBtn.addEventListener("click", async () => {
+    const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt afsluiten?");
+    if (!ok) return;
+
+    const r = await fetch("/api/poweroff", { method: "POST" });
+    if (r.ok) connDot.classList.add("disconnected");
+  });
+
+  rebootBtn.addEventListener("click", async () => {
+    const ok = confirm("Weet je zeker dat je de Raspberry Pi wilt herstarten?");
+    if (!ok) return;
+
+    const r = await fetch("/api/reboot", { method: "POST" });
+    if (r.ok) connDot.classList.add("disconnected");
+  });
+
+  function createHintItem(h) {
+    const li = document.createElement("li");
+    li.className = "row compactRow hintItem";
+    li.title = h.id || "";
+
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = h.label || h.id;
+
+    const play = document.createElement("span");
+    play.className = "hintPlay";
+    play.textContent = "\u25b6";
+
+    li.appendChild(label);
+    li.appendChild(play);
+
+    li.addEventListener("click", () => {
+      fetch(`/sound/hint/${encodeURIComponent(h.id)}`);
+    });
+
+    return li;
+  }
+
+  function createPuzzleBlock(puzzle, startOpen = false) {
+    return createCollapsibleHintBlock(
+      puzzle.label || puzzle.id || "Puzzel",
+      puzzle.hints || [],
+      "hintPuzzleTitle",
+      startOpen
+    );
+  }
+
+  function createCollapsibleHintBlock(title, hints, titleClass, startOpen = false) {
+    const fragment = document.createDocumentFragment();
+
+    const header = document.createElement("li");
+    header.className = `row compactRow ${titleClass} hintAccordionHeader`;
+
+    const titleText = document.createElement("span");
+    titleText.innerHTML = `<strong>${title}</strong>`;
+
+    const toggleIcon = document.createElement("span");
+    toggleIcon.className = "hintToggleIcon";
+
+    header.appendChild(titleText);
+    header.appendChild(toggleIcon);
+
+    const wrapper = document.createElement("li");
+    wrapper.className = "hintPuzzleHints hintAccordionBody";
+
+    const innerList = document.createElement("ul");
+    innerList.className = "list compact";
+
+    for (const h of (hints || [])) {
+      innerList.appendChild(createHintItem(h));
+    }
+
+    wrapper.appendChild(innerList);
+
+    wrapper.classList.toggle("hidden", !startOpen);
+    toggleIcon.textContent = startOpen ? "\u25bc" : "\u25b6";
+
+    fragment.appendChild(header);
+    fragment.appendChild(wrapper);
+
+    fragment._accordion = {
+      header,
+      wrapper,
+      toggleIcon,
+      get isOpen() {
+        return !wrapper.classList.contains("hidden");
+      },
+      open() {
+        wrapper.classList.remove("hidden");
+        toggleIcon.textContent = "\u25bc";
+      },
+      close() {
+        wrapper.classList.add("hidden");
+        toggleIcon.textContent = "\u25b6";
+      }
+    };
+
+    return fragment;
+  }
+
+  function renderHints(gameState, hintsData) {
+    const key = JSON.stringify({
+      gameState,
+      hintsData
+    });
+
+    if (key === lastHintsRenderKey) {
+      return;
+    }
+
+    lastHintsRenderKey = key;
+    const sceneEl = document.getElementById("hints-scene");
+    const hintsEl = document.getElementById("hints");
+
+    if (sceneEl) sceneEl.textContent = gameState || "";
+    if (!hintsEl) return;
+
+    hintsEl.innerHTML = "";
+
+    const globalLabel = hintsData?.global?.label || "Algemeen";
+    const globalHints = hintsData?.global?.hints || [];
+    const puzzles = hintsData?.puzzles || [];
+
+    if (globalHints.length === 0 && puzzles.length === 0) {
+      const li = document.createElement("li");
+      li.className = "row compactRow";
+      li.innerHTML = `<span class="muted">Geen hints voor deze scene.</span>`;
+      hintsEl.appendChild(li);
+      return;
+    }
+
+    const accordionBlocks = [];
+
+    if (globalHints.length > 0) {
+      const globalBlock = createCollapsibleHintBlock(
+        globalLabel,
+        globalHints,
+        "hintSectionTitle",
+        false
+      );
+      accordionBlocks.push(globalBlock);
+      hintsEl.appendChild(globalBlock);
+    }
+
+    puzzles.forEach((puzzle, index) => {
+      const block = createPuzzleBlock(puzzle, index === 0);
+      accordionBlocks.push(block);
+      hintsEl.appendChild(block);
+    });
+
+    function closeAllExcept(activeBlock) {
+      accordionBlocks.forEach(block => {
+        if (block !== activeBlock) {
+          block._accordion.close();
+        }
+      });
+    }
+
+    accordionBlocks.forEach(block => {
+      const acc = block._accordion;
+      acc.header.addEventListener("click", () => {
+        const willOpen = !acc.isOpen;
+
+        closeAllExcept(block);
+
+        if (willOpen) {
+          acc.open();
+        } else {
+          acc.close();
+        }
+      });
+    });
+  }
+
+  function connectSSE() {
+    const es = new EventSource("/events");
+
+    es.addEventListener("open", () => {
+      connDot.classList.remove("disconnected");
+      connDot.classList.add("connected");
+    });
+
+    es.addEventListener("error", () => {
+      connDot.classList.remove("connected");
+      connDot.classList.add("disconnected");
+    });
+
+    es.onmessage = (msg) => {
+      try {
+        const evt = JSON.parse(msg.data);
+
+        if (evt.type === "input") {
+          setInputDot(evt.label, evt.state);
+        } else if (evt.type === "game_state") {
+          setGameState(evt.game_state);
+        } else if (evt.type === "timer") {
+          applyTimer(evt.timer);
+        } else if (evt.type === "full_state") {
+          setGameState(evt.game_state);
+          setLanguage(evt.language || "nl");
+          for (const [label, state] of Object.entries(evt.inputs || {})) {
+            setInputDot(label, state);
+          }
+          for (const [name, on] of Object.entries(evt.relays || {})) {
+            setRelayButton(name, on);
+          }
+          renderHints(evt.game_state, evt.hints || {});
+          applyTimer(evt.timer || { running: false, elapsed: 0 });
+        } else if (evt.type === "language") {
+          setLanguage(evt.language || "nl");
+          renderHints(gameStateEl.textContent, evt.hints || {});
+        } else if (evt.type === "relay") {
+          setRelayButton(evt.name, evt.on);
+        } else if (evt.type === "relays" && evt.pattern) {
+          for (const [name, on] of Object.entries(evt.pattern)) {
+            setRelayButton(name, on);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to handle SSE message", e);
+      }
+    };
+  }
+
+  (async () => {
+    try {
+      initCameras();
+      await loadInitial();
+      connectSSE();
+    } catch (e) {
+      console.error("Failed to initialize escape room UI", e);
+    }
+  })();
+})();
