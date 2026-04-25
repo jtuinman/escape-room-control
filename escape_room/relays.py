@@ -2,18 +2,19 @@ import time
 
 from gpiozero import OutputDevice
 
-from .config import RELAY_ACTIVE_HIGH, RELAY_PATTERNS, RELAYS
+from .config import RELAY_ACTIVE_HIGH, RELAY_HARDWARE, RELAY_PATTERNS, RELAYS
 
 
 def init_relays(ctx) -> None:
-    for name, cfg in RELAYS.items():
+    for name, cfg in RELAY_HARDWARE.items():
         pin = int(cfg["pin"])
         dev = OutputDevice(pin, active_high=RELAY_ACTIVE_HIGH, initial_value=False)
-        ctx.register_relay_device(name, dev)
+        dev.off()
+        ctx.register_relay_device(name, dev, active=(name in RELAYS))
 
 
 def relays_off(ctx, reason: str) -> None:
-    for dev in ctx.get_relay_devices().values():
+    for dev in ctx.get_relay_hardware_devices().values():
         dev.off()
     ctx.broadcaster.publish({
         "type": "relays",

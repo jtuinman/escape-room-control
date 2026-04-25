@@ -14,6 +14,7 @@ from .state import load_language
 class EscapeRoomContext:
     broadcaster: Broadcaster = field(default_factory=Broadcaster)
     devices: Dict[str, object] = field(default_factory=dict)
+    relay_hardware_devices: Dict[str, OutputDevice] = field(default_factory=dict)
     relay_devices: Dict[str, OutputDevice] = field(default_factory=dict)
     current_relays: Dict[str, bool] = field(default_factory=dict)
     lock: threading.Lock = field(default_factory=threading.Lock)
@@ -141,14 +142,20 @@ class EscapeRoomContext:
         with self.lock:
             return self.devices[label].button
 
-    def register_relay_device(self, name: str, device: OutputDevice) -> None:
+    def register_relay_device(self, name: str, device: OutputDevice, active: bool = True) -> None:
         with self.lock:
-            self.relay_devices[name] = device
-            self.current_relays[name] = False
+            self.relay_hardware_devices[name] = device
+            if active:
+                self.relay_devices[name] = device
+                self.current_relays[name] = False
 
     def get_relay_devices(self) -> dict:
         with self.lock:
             return dict(self.relay_devices)
+
+    def get_relay_hardware_devices(self) -> dict:
+        with self.lock:
+            return dict(self.relay_hardware_devices)
 
     def has_relay_device(self, name: str) -> bool:
         with self.lock:

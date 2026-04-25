@@ -100,7 +100,14 @@ def validate_runtime_config() -> ValidationResult:
         require_role=True,
         require_bounce_time=True,
     )
-    relay_pins = _validate_pin_map(
+    relay_hardware_pins = _validate_pin_map(
+        config.RELAY_HARDWARE,
+        "RELAY_HARDWARE",
+        result,
+        require_role=False,
+        require_bounce_time=False,
+    )
+    _validate_pin_map(
         config.RELAYS,
         "RELAYS",
         result,
@@ -108,12 +115,15 @@ def validate_runtime_config() -> ValidationResult:
         require_bounce_time=False,
     )
 
+    if not set(config.RELAYS).issubset(set(config.RELAY_HARDWARE)):
+        result.error("RELAYS must be a subset of RELAY_HARDWARE")
+
     roles = [str(cfg.get("role", "")) for cfg in config.INPUTS.values() if isinstance(cfg, dict)]
     missing_roles = REQUIRED_STATE_MACHINE_ROLES - set(roles)
     if missing_roles:
         result.error(f"INPUTS missing required state-machine roles: {sorted(missing_roles)}")
 
-    overlap = input_pins & relay_pins
+    overlap = input_pins & relay_hardware_pins
     if overlap:
         result.error(f"GPIO input pins and relay pins overlap: {sorted(overlap)}")
 

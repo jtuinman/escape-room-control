@@ -13,18 +13,25 @@ INPUTS = {
 
 RELAY_ACTIVE_HIGH = False
 
-RELAYS = {
+RELAY_HARDWARE = {
     "relay_1": {"pin": 16},
     "relay_2": {"pin": 20},
+    # relay_3 is physically present on the board, but not part of game/UI control.
     "relay_3": {"pin": 21},
     "relay_4": {"pin": 26},
 }
 
+RELAYS = {
+    "relay_1": RELAY_HARDWARE["relay_1"],
+    "relay_2": RELAY_HARDWARE["relay_2"],
+    "relay_4": RELAY_HARDWARE["relay_4"],
+}
+
 RELAY_PATTERNS = {
-    "idle": {"relay_1": False, "relay_2": False, "relay_3": False, "relay_4": False},
-    "scene_1": {"relay_1": True, "relay_2": False, "relay_3": False, "relay_4": True},
-    "scene_2": {"relay_1": False, "relay_2": True, "relay_3": False, "relay_4": False},
-    "end_game": {"relay_1": True, "relay_2": True, "relay_3": False, "relay_4": False},
+    "idle": {"relay_1": False, "relay_2": False, "relay_4": False},
+    "scene_1": {"relay_1": True, "relay_2": False, "relay_4": True},
+    "scene_2": {"relay_1": False, "relay_2": True, "relay_4": False},
+    "end_game": {"relay_1": True, "relay_2": True, "relay_4": False},
 }
 
 ACTIVE_WHEN_OPEN = True
@@ -41,7 +48,6 @@ STATE_LABELS = {
 RELAY_LABELS = {
     "relay_1": "lamp",
     "relay_2": "spot",
-#    "relay_3": "niet beschikbaar",
     "relay_4": "magneet",
 }
 
