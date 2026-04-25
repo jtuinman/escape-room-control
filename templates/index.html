@@ -118,8 +118,10 @@
     </div>
   </main>
 
+  <script type="application/json" id="camera-streams">{{ camera_streams | tojson }}</script>
+
   <script>
-    const CAMERA_STREAMS = {{ camera_streams | tojson }};
+    const CAMERA_STREAMS = JSON.parse(document.getElementById("camera-streams").textContent);
 
     const connDot = document.getElementById("connDot");
     connDot.classList.add("disconnected");
