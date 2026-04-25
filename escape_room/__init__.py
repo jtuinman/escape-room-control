@@ -176,33 +176,22 @@ class EscapeRoomContext:
         with self.lock:
             return self.game_state == "idle"
 
-    def transition_game_state(self, new_state: str):
+    def prepare_state_entry(self, new_state: str, entry_actions) -> None:
         with self.lock:
             self.game_state = new_state
-
-            if new_state == "idle":
-                self.timer_running = False
-                self.timer_started_at = None
-                self.timer_elapsed_base = 0.0
-                return ("panic", None)
-
-            if new_state == "scene_1":
-                if (
-                    (not self.timer_running)
-                    and (self.timer_started_at is None)
-                    and (self.timer_elapsed_base == 0.0)
-                ):
-                    self.timer_started_at = time.monotonic()
-                    self.timer_running = True
-                return ("bg_start", "state1.mp3")
-
-            if new_state == "scene_2":
-                return ("bg_switch", "state2.mp3")
-
-            if new_state == "end_game":
-                return ("bg_switch", "state3.mp3")
-
-            return None
+            for action in entry_actions:
+                if action == "reset_timer":
+                    self.timer_running = False
+                    self.timer_started_at = None
+                    self.timer_elapsed_base = 0.0
+                elif action == "start_timer_if_fresh":
+                    if (
+                        (not self.timer_running)
+                        and (self.timer_started_at is None)
+                        and (self.timer_elapsed_base == 0.0)
+                    ):
+                        self.timer_started_at = time.monotonic()
+                        self.timer_running = True
 
     def set_language(self, language: str) -> dict:
         with self.lock:

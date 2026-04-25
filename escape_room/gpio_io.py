@@ -1,10 +1,10 @@
 import time
 from dataclasses import dataclass
-from typing import Optional
 
 from gpiozero import Button
 
 from .config import ACTIVE_WHEN_OPEN, INPUTS
+from .state_machine import StateMachine
 
 
 @dataclass
@@ -33,57 +33,8 @@ def set_input_state(ctx, label: str, is_active: bool) -> None:
     })
 
 
-def get_label_by_role(role: str) -> Optional[str]:
-    for label, cfg in INPUTS.items():
-        if cfg.get("role") == role:
-            return label
-    return None
-
-
 def evaluate_rules_on_change(ctx, changed_label: str) -> None:
-    rule_snapshot = ctx.snapshot_rule_inputs()
-    gs = rule_snapshot["game_state"]
-    snapshot = rule_snapshot["inputs"]
-    prev_snapshot = rule_snapshot["previous_inputs"]
-
-    pb1 = get_label_by_role("pb1")
-    pb2 = get_label_by_role("pb2")
-    t1 = get_label_by_role("t1")
-    t2 = get_label_by_role("t2")
-
-    def is_active(label: Optional[str]) -> bool:
-        if not label:
-            return False
-        return snapshot.get(label) == "ACTIVE"
-
-    def was_inactive(label: Optional[str]) -> bool:
-        if not label:
-            return False
-        return prev_snapshot.get(label) == "INACTIVE"
-
-    if gs == "idle":
-        return
-
-    if gs == "scene_1":
-        if is_active(pb1) and is_active(pb2):
-            from .state import set_game_state
-
-            set_game_state(ctx, "scene_2", reason="pb1+pb2_overlap")
-        return
-
-    if gs == "scene_2":
-        if changed_label == t1 and was_inactive(t1) and is_active(t1):
-            from .state import set_game_state
-
-            set_game_state(ctx, "end_game", reason="toggle_1_edge")
-        return
-
-    if gs == "end_game":
-        if changed_label == t2 and was_inactive(t2) and is_active(t2):
-            from .timer import stop_timer
-
-            stop_timer(ctx, reason="toggle_2_edge_stop_timer")
-        return
+    StateMachine(ctx).handle_input_change(changed_label)
 
 
 def init_gpio(ctx) -> None:
