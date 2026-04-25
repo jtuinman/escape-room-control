@@ -41,8 +41,8 @@ STATE_LABELS = {
 RELAY_LABELS = {
     "relay_1": "lamp",
     "relay_2": "spot",
-    "relay_3": "niet beschikbaar",
-    "relay_4": "magneet",
+#    "relay_3": "niet beschikbaar",
+    "relay_3": "magneet",
 }
 
 CONFIG_DIR = Path("config")
