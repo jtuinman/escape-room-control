@@ -4,9 +4,9 @@ HOST = "0.0.0.0"
 PORT = 8000
 
 INPUTS = {
-    "reed switch 1": {"pin": 17, "bounce_time": 0.05, "role": "rs1"},
-    "reed switch 2": {"pin": 27, "bounce_time": 0.05, "role": "rs2"},
-    "reed switch 3": {"pin": 22, "bounce_time": 0.05, "role": "rs3"},
+    "Boek 1": {"pin": 17, "bounce_time": 0.05, "role": "rs1"},
+    "Boek 2": {"pin": 27, "bounce_time": 0.05, "role": "rs2"},
+    "Eind sleutel": {"pin": 22, "bounce_time": 0.05, "role": "rs3"},
     "toggle 2": {"pin": 5, "bounce_time": 0.05, "role": "t2"},
 }
 
@@ -51,9 +51,9 @@ RELAY_UI = {
 }
 
 INPUT_UI = {
-    "rs1": {"label": "reed switch 1"},
-    "rs2": {"label": "reed switch 2"},
-    "rs3": {"label": "reed switch 3"},
+    "rs1": {"label": "Boek 1"},
+    "rs2": {"label": "Boek 2"},
+    "rs3": {"label": "Eind sleutel"},
     "t2": {"label": "toggle 2"},
 }
 

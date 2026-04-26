@@ -72,7 +72,7 @@ def was_inactive(label: Optional[str], previous_inputs: dict) -> bool:
     return previous_inputs.get(label) == "INACTIVE"
 
 
-def reed_switch_1_and_2_inactive(event: InputChangeEvent) -> bool:
+def book_1_and_2_inactive(event: InputChangeEvent) -> bool:
     return (
         is_inactive(get_label_by_role("rs1"), event.inputs)
         and is_inactive(get_label_by_role("rs2"), event.inputs)
@@ -97,7 +97,7 @@ def active_to_inactive_edge(event: InputChangeEvent, role: str) -> bool:
     )
 
 
-def reed_switch_3_active_to_inactive(event: InputChangeEvent) -> bool:
+def end_key_active_to_inactive(event: InputChangeEvent) -> bool:
     return active_to_inactive_edge(event, "rs3")
 
 
@@ -116,9 +116,9 @@ STATE_DEFINITIONS = {
         rules=(
             TransitionRule(
                 trigger=INPUT_CHANGE,
-                guard=reed_switch_1_and_2_inactive,
+                guard=book_1_and_2_inactive,
                 target_state="scene_2",
-                reason="reed_switch_1_2_inactive",
+                reason="boek_1_2_inactive",
             ),
         ),
     ),
@@ -128,9 +128,9 @@ STATE_DEFINITIONS = {
         rules=(
             TransitionRule(
                 trigger=INPUT_CHANGE,
-                guard=reed_switch_3_active_to_inactive,
+                guard=end_key_active_to_inactive,
                 target_state="end_game",
-                reason="reed_switch_3_edge",
+                reason="eind_sleutel_edge",
             ),
         ),
     ),
