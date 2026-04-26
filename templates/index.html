@@ -13,7 +13,10 @@
     <div class="header-row">
       <h1 class="header-title">
         Escape Room Control
-        <span id="connDot" class="connDot"></span>
+        <span class="status-indicators" aria-label="Service status">
+          <span class="status-item">Escape <span id="escape-status" class="status-dot" title="Escape Control"></span></span>
+          <span class="status-item">Sound <span id="sound-status" class="status-dot" title="Sound system"></span></span>
+        </span>
       </h1>
       <div class="buttons header-buttons">
         <button class="btn" id="lang-nl" type="button">NL</button>
@@ -28,7 +31,6 @@
             <div>
               <div class="muted">Game state</div>
               <div id="gameState" class="big">…</div>
-              <div class="soundStatus muted">Sound ready: <span id="soundReady">unknown</span></div>
             </div>
             <div class="timerBox">
               <div id="timer" class="big mono">00:00</div>

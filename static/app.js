@@ -13,10 +13,11 @@
   };
   let currentLanguage = "nl";
 
-  const connDot = document.getElementById("connDot");
-  connDot.classList.add("disconnected");
+  const escapeStatusEl = document.getElementById("escape-status");
+  const soundDotEl = document.getElementById("sound-status");
+  setStatusDot(escapeStatusEl, false);
+  setStatusDot(soundDotEl, false);
   const gameStateEl = document.getElementById("gameState");
-  const soundReadyEl = document.getElementById("soundReady");
   const timerEl = document.getElementById("timer");
   timerEl.addEventListener("click", () => {
     toggleTimer();
@@ -262,17 +263,13 @@
   }
 
   function setSoundStatus(sound) {
-    if (!soundReadyEl) return;
-
     const ready = !!(sound && sound.ready);
-    soundReadyEl.textContent = ready ? "yes" : "no";
-    soundReadyEl.classList.toggle("sound-ready", ready);
-    soundReadyEl.classList.toggle("sound-not-ready", !ready);
+    setStatusDot(soundDotEl, ready);
 
     if (sound && sound.last_status_payload) {
-      soundReadyEl.title = sound.last_status_payload;
+      soundDotEl.title = `Sound system: ${sound.last_status_payload}`;
     } else {
-      soundReadyEl.title = "";
+      soundDotEl.title = "Sound system";
     }
   }
 
@@ -346,7 +343,7 @@
     if (!ok) return;
 
     const r = await fetch("/api/poweroff", { method: "POST" });
-    if (r.ok) connDot.classList.add("disconnected");
+    if (r.ok) setStatusDot(escapeStatusEl, false);
   });
 
   rebootBtn.addEventListener("click", async () => {
@@ -354,7 +351,7 @@
     if (!ok) return;
 
     const r = await fetch("/api/reboot", { method: "POST" });
-    if (r.ok) connDot.classList.add("disconnected");
+    if (r.ok) setStatusDot(escapeStatusEl, false);
   });
 
   function createHintItem(h) {
@@ -520,13 +517,11 @@
     const es = new EventSource("/events");
 
     es.addEventListener("open", () => {
-      connDot.classList.remove("disconnected");
-      connDot.classList.add("connected");
+      setStatusDot(escapeStatusEl, true);
     });
 
     es.addEventListener("error", () => {
-      connDot.classList.remove("connected");
-      connDot.classList.add("disconnected");
+      setStatusDot(escapeStatusEl, false);
     });
 
     es.onmessage = (msg) => {
@@ -568,6 +563,12 @@
         console.error("Failed to handle SSE message", e);
       }
     };
+  }
+
+  function setStatusDot(el, ok) {
+    if (!el) return;
+    el.classList.remove("status-green", "status-red");
+    el.classList.add(ok ? "status-green" : "status-red");
   }
 
   (async () => {

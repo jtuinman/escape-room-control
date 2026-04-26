@@ -25,6 +25,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .muted {
@@ -114,21 +115,6 @@ h1 {
 .timerBox {
   text-align: center;
   min-width: 180px;
-}
-
-.soundStatus {
-  margin-top: 6px;
-  margin-bottom: 0;
-}
-
-.sound-ready {
-  color: #15803d;
-  font-weight: 700;
-}
-
-.sound-not-ready {
-  color: #b91c1c;
-  font-weight: 700;
 }
 
 h2 {
@@ -243,19 +229,36 @@ h2 {
   background: #e74c3c;
 }
 
-.connDot {
-  width: 12px;
-  height: 12px;
+.status-indicators {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: gray;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  flex: 0 0 auto;
 }
 
-.connDot.connected {
+.status-dot.status-green {
   background: #2ecc71;
 }
 
-.connDot.disconnected {
+.status-dot.status-red {
   background: #e74c3c;
 }
 
