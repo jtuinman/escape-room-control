@@ -35,6 +35,7 @@ def publish_full_state(ctx, reason: str) -> None:
         "language": snapshot["language"],
         "hints": snapshot["hints"],
         "timer": snapshot["timer"],
+        "sound": snapshot["sound"],
         "ts": time.time(),
     }
     ctx.broadcaster.publish(evt)

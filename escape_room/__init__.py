@@ -94,6 +94,8 @@ class EscapeRoomContext:
         return self.hints_by_lang[language]
 
     def snapshot_state(self) -> dict:
+        from mqtt_sound import get_status as get_sound_status
+
         with self.lock:
             state_name = self.game_state
             return {
@@ -103,6 +105,7 @@ class EscapeRoomContext:
                 "relays": dict(self.current_relays),
                 "hints": self.get_hints_payload_for_state_locked(state_name),
                 "timer": self.snapshot_timer_locked(),
+                "sound": get_sound_status(),
             }
 
     def snapshot_index(self) -> dict:

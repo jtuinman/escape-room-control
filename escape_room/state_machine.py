@@ -165,6 +165,10 @@ class StateMachine:
 
         publish_full_state(self.ctx, reason=f"state_change:{reason}")
 
+        from .sound_sync import resync_sound_state
+
+        resync_sound_state(self.ctx, reason=f"state_change:{reason}")
+
     def enter_state(self, state: StateDefinition, reason: str) -> None:
         for action in state.entry_actions:
             self.run_entry_action(action, state.name, reason)

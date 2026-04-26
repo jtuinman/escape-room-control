@@ -16,6 +16,7 @@
   const connDot = document.getElementById("connDot");
   connDot.classList.add("disconnected");
   const gameStateEl = document.getElementById("gameState");
+  const soundReadyEl = document.getElementById("soundReady");
   const timerEl = document.getElementById("timer");
   timerEl.addEventListener("click", () => {
     toggleTimer();
@@ -260,6 +261,21 @@
     }
   }
 
+  function setSoundStatus(sound) {
+    if (!soundReadyEl) return;
+
+    const ready = !!(sound && sound.ready);
+    soundReadyEl.textContent = ready ? "yes" : "no";
+    soundReadyEl.classList.toggle("sound-ready", ready);
+    soundReadyEl.classList.toggle("sound-not-ready", !ready);
+
+    if (sound && sound.last_status_payload) {
+      soundReadyEl.title = sound.last_status_payload;
+    } else {
+      soundReadyEl.title = "";
+    }
+  }
+
   function setLanguage(lang) {
     currentLanguage = lang || "nl";
     langNlBtn.classList.toggle("active-state", lang === "nl");
@@ -285,6 +301,7 @@
     for (const [name, on] of Object.entries(data.relays || {})) {
       setRelayButton(name, on);
     }
+    setSoundStatus(data.sound || {});
     applyTimer(data.timer || { running: false, elapsed: 0 });
   }
 
@@ -534,9 +551,12 @@
           }
           renderHints(evt.game_state, evt.hints || {});
           applyTimer(evt.timer || { running: false, elapsed: 0 });
+          setSoundStatus(evt.sound || {});
         } else if (evt.type === "language") {
           setLanguage(evt.language || "nl");
           renderHints(gameStateEl.textContent, evt.hints || {});
+        } else if (evt.type === "sound_status") {
+          setSoundStatus(evt.sound || {});
         } else if (evt.type === "relay") {
           setRelayButton(evt.name, evt.on);
         } else if (evt.type === "relays" && evt.pattern) {

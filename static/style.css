@@ -116,6 +116,21 @@ h1 {
   min-width: 180px;
 }
 
+.soundStatus {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.sound-ready {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.sound-not-ready {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 h2 {
   margin: 0 0 10px;
   font-size: 16px;

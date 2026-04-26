@@ -57,6 +57,7 @@ def register_routes(app, ctx) -> None:
             "relays": snapshot["relays"],
             "hints": snapshot["hints"],
             "timer": snapshot["timer"],
+            "sound": snapshot["sound"],
             "states": ui_config["states"],
             "relays_meta": ui_config["relays"],
             "inputs_meta": ui_config["inputs"],
