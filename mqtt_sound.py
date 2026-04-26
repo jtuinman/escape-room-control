@@ -176,8 +176,6 @@ def _set_sound_status(ready: bool, payload: str) -> None:
         _emit_status(status_callbacks)
     if callbacks:
         _emit_ready(callbacks)
-    elif ready:
-        flush_desired_state(reason="sound_status_ok")
 
 
 def _emit_ready(callbacks: list[Callable[[], None]]) -> None:
