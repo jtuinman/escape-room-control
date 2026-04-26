@@ -50,10 +50,10 @@
         <section class="card">
           <h2>Inputs</h2>
           <ul class="list compact" id="list">
-            {% for label in inputs %}
+            {% for input in inputs %}
             <li class="row compactRow">
-              <span class="label">{{ label }}</span>
-              <span class="dot unknown" id="dot-{{ label|replace(' ', '_') }}" title="…"></span>
+              <span class="label">{{ input.label }}</span>
+              <span class="dot unknown" id="dot-{{ input.id|replace(' ', '_') }}" title="…"></span>
             </li>
             {% endfor %}
           </ul>

@@ -54,20 +54,32 @@ def is_active(label: Optional[str], inputs: dict) -> bool:
     return inputs.get(label) == "ACTIVE"
 
 
+def is_inactive(label: Optional[str], inputs: dict) -> bool:
+    if not label:
+        return False
+    return inputs.get(label) == "INACTIVE"
+
+
+def was_active(label: Optional[str], previous_inputs: dict) -> bool:
+    if not label:
+        return False
+    return previous_inputs.get(label) == "ACTIVE"
+
+
 def was_inactive(label: Optional[str], previous_inputs: dict) -> bool:
     if not label:
         return False
     return previous_inputs.get(label) == "INACTIVE"
 
 
-def pb1_and_pb2_active(event: InputChangeEvent) -> bool:
+def reed_switch_1_and_2_inactive(event: InputChangeEvent) -> bool:
     return (
-        is_active(get_label_by_role("pb1"), event.inputs)
-        and is_active(get_label_by_role("pb2"), event.inputs)
+        is_inactive(get_label_by_role("rs1"), event.inputs)
+        and is_inactive(get_label_by_role("rs2"), event.inputs)
     )
 
 
-def toggle_edge(event: InputChangeEvent, role: str) -> bool:
+def inactive_to_active_edge(event: InputChangeEvent, role: str) -> bool:
     label = get_label_by_role(role)
     return (
         event.changed_label == label
@@ -76,12 +88,21 @@ def toggle_edge(event: InputChangeEvent, role: str) -> bool:
     )
 
 
-def toggle_1_inactive_to_active(event: InputChangeEvent) -> bool:
-    return toggle_edge(event, "t1")
+def active_to_inactive_edge(event: InputChangeEvent, role: str) -> bool:
+    label = get_label_by_role(role)
+    return (
+        event.changed_label == label
+        and was_active(label, event.previous_inputs)
+        and is_inactive(label, event.inputs)
+    )
+
+
+def reed_switch_3_active_to_inactive(event: InputChangeEvent) -> bool:
+    return active_to_inactive_edge(event, "rs3")
 
 
 def toggle_2_inactive_to_active(event: InputChangeEvent) -> bool:
-    return toggle_edge(event, "t2")
+    return inactive_to_active_edge(event, "t2")
 
 
 STATE_DEFINITIONS = {
@@ -95,9 +116,9 @@ STATE_DEFINITIONS = {
         rules=(
             TransitionRule(
                 trigger=INPUT_CHANGE,
-                guard=pb1_and_pb2_active,
+                guard=reed_switch_1_and_2_inactive,
                 target_state="scene_2",
-                reason="pb1+pb2_overlap",
+                reason="reed_switch_1_2_inactive",
             ),
         ),
     ),
@@ -107,9 +128,9 @@ STATE_DEFINITIONS = {
         rules=(
             TransitionRule(
                 trigger=INPUT_CHANGE,
-                guard=toggle_1_inactive_to_active,
+                guard=reed_switch_3_active_to_inactive,
                 target_state="end_game",
-                reason="toggle_1_edge",
+                reason="reed_switch_3_edge",
             ),
         ),
     ),

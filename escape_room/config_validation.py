@@ -7,7 +7,7 @@ from . import config
 
 
 CAMERA_IDS_EXPECTED_BY_FRONTEND = {"cam1", "cam2", "cam3"}
-REQUIRED_STATE_MACHINE_ROLES = {"pb1", "pb2", "t1", "t2"}
+REQUIRED_STATE_MACHINE_ROLES = {"rs1", "rs2", "rs3", "t2"}
 URL_PREFIXES = ("http://", "https://", "rtsp://")
 
 

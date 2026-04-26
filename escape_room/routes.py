@@ -7,7 +7,7 @@ from flask import Response, abort, jsonify, render_template, request
 
 from mqtt_sound import bg_start, bg_stop, bg_switch, hint_play, panic, set_language as mqtt_set_language
 
-from .config import BACKGROUND_AUDIO_EXTENSIONS, INPUTS, SUPPORTED_LANGUAGES, VALID_GAME_STATES
+from .config import BACKGROUND_AUDIO_EXTENSIONS, SUPPORTED_LANGUAGES, VALID_GAME_STATES
 from .hints import find_hint_by_id
 from .relays import toggle_relay
 from .state import save_language, set_game_state
@@ -29,13 +29,12 @@ def _validate_bg_file(filename: str) -> str:
 def register_routes(app, ctx) -> None:
     @app.route("/")
     def index():
-        labels = list(INPUTS.keys())
         snapshot = ctx.snapshot_index()
         ui_config = get_ui_config()
 
         return render_template(
             "index.html",
-            inputs=labels,
+            inputs=ui_config["inputs"],
             game_state=snapshot["game_state"],
             language=snapshot["language"],
             supported_languages=sorted(SUPPORTED_LANGUAGES),

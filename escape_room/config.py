@@ -4,11 +4,10 @@ HOST = "0.0.0.0"
 PORT = 8000
 
 INPUTS = {
-    "pushbutton 1": {"pin": 17, "bounce_time": 0.05, "role": "pb1"},
-    "pushbutton 2": {"pin": 27, "bounce_time": 0.05, "role": "pb2"},
-    "toggle 1": {"pin": 22, "bounce_time": 0.05, "role": "t1"},
+    "reed switch 1": {"pin": 17, "bounce_time": 0.05, "role": "rs1"},
+    "reed switch 2": {"pin": 27, "bounce_time": 0.05, "role": "rs2"},
+    "reed switch 3": {"pin": 22, "bounce_time": 0.05, "role": "rs3"},
     "toggle 2": {"pin": 5, "bounce_time": 0.05, "role": "t2"},
-    "reed switch": {"pin": 6, "bounce_time": 0.05, "role": "rs1"},
 }
 
 RELAY_ACTIVE_HIGH = False
@@ -52,11 +51,10 @@ RELAY_UI = {
 }
 
 INPUT_UI = {
-    "pb1": {"label": "pushbutton 1"},
-    "pb2": {"label": "pushbutton 2"},
-    "t1": {"label": "toggle 1"},
+    "rs1": {"label": "reed switch 1"},
+    "rs2": {"label": "reed switch 2"},
+    "rs3": {"label": "reed switch 3"},
     "t2": {"label": "toggle 2"},
-    "rs1": {"label": "reed switch"},
 }
 
 CONFIG_DIR = Path("config")
