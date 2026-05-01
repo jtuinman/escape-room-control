@@ -12,6 +12,6 @@
   "cam3": {
     "label": "Camera 3",
     "url": "http://192.168.68.135:8889/cam/",
-    "visible": false
+    "visible": true
   }
 }
