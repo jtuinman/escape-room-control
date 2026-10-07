@@ -11,7 +11,7 @@ if [ "$(whoami)" != "pi" ]; then
     exit 1
 fi
 
-echo "[1/5] Systeempakketten installeren..."
+echo "[1/6] Systeempakketten installeren..."
 sudo apt update
 sudo apt install -y \
     git \
@@ -19,17 +19,22 @@ sudo apt install -y \
     python3-pip \
     python3-lgpio
 
-echo "[2/5] Python virtual environment maken..."
+echo "[2/6] Python virtual environment maken..."
 cd "$APP_DIR"
 
 rm -rf .venv
 python3 -m venv --system-site-packages .venv
 
-echo "[3/5] Python dependencies installeren..."
+echo "[3/6] Python dependencies installeren..."
 "$APP_DIR/.venv/bin/pip" install --upgrade pip
 "$APP_DIR/.venv/bin/pip" install -r requirements.txt
 
-echo "[4/5] Systemd service installeren..."
+echo "[4/6] Sudo-rechten voor poweroff/reboot instellen..."
+echo 'pi ALL=(root) NOPASSWD: /usr/sbin/poweroff, /usr/sbin/reboot' | \
+    sudo tee /etc/sudoers.d/escape-room >/dev/null
+sudo chmod 440 /etc/sudoers.d/escape-room
+
+echo "[5/6] Systemd service installeren..."
 sudo tee "$SERVICE_FILE" >/dev/null <<EOF
 [Unit]
 Description=Escape Room Control
@@ -53,7 +58,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable escape-room.service
 sudo systemctl restart escape-room.service
 
-echo "[5/5] Installatie controleren..."
+echo "[6/6] Installatie controleren..."
 sleep 3
 
 if systemctl is-active --quiet escape-room.service; then

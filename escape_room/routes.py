@@ -132,7 +132,7 @@ def register_routes(app, ctx) -> None:
         })
 
         try:
-            subprocess.Popen(["sudo", "/usr/sbin/poweroff"])
+            subprocess.Popen(["/usr/bin/sudo", "-n", "/usr/sbin/poweroff"])
         except Exception as e:
             return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -151,7 +151,7 @@ def register_routes(app, ctx) -> None:
         })
 
         try:
-            subprocess.Popen(["sudo", "/usr/sbin/reboot"])
+            subprocess.Popen(["/usr/bin/sudo", "-n", "/usr/sbin/reboot"])
         except Exception as e:
             return jsonify({"ok": False, "error": str(e)}), 500
 
