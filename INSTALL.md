@@ -126,6 +126,49 @@ Zet daarna de repository-remote op SSH:
 git remote set-url origin git@github.com:jtuinman/escape-room-control.git
 ```
 
+## Hardwareconfiguratie
+
+De software gebruikt BCM GPIO-nummers.
+
+### Ingangen
+
+| Functie | GPIO |
+|---|---:|
+| Boek 1 | 17 |
+| Boek 2 | 27 |
+| Eind sleutel | 22 |
+| Toggle 2 | 5 |
+
+### Relais
+
+| Relais | GPIO | Functie |
+|---|---:|---|
+| relay_1 | 16 | lamp |
+| relay_2 | 20 | spot |
+| relay_3 | 21 | fysiek aanwezig, niet actief in game/UI |
+| relay_4 | 26 | magneet |
+
+De relais zijn active-low (`RELAY_ACTIVE_HIGH = False`).
+
+## Netwerkconfiguratie
+
+### Soundmachine
+
+Standaard verwacht de Escape Pi de soundmachine op:
+
+`192.168.68.125`
+
+Als het IP-adres anders is, kan dit via de environment variable
+`SOUND_PI_HOST` worden ingesteld.
+
+### Camera's
+
+De camera-adressen staan in:
+
+`config/camera_streams.json`
+
+Pas dit bestand aan wanneer de camera's andere IP-adressen krijgen.
+
 ## Handige commando's
 
 Service herstarten:
